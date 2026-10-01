@@ -3,1320 +3,745 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>eTTN Generator</title>
-
+<title>Вчасно.ТТН · JSON генератор</title>
 <style>
-
-.tabs{
-    display:flex;
-    gap:10px;
-    margin-bottom:20px;
+:root{
+  color-scheme:dark;
+  --brand:#B9A6FF;        /* світло-фіолетовий акцент — змінюється тут */
+  --brand-ink:#1A1433;    /* текст на фіолетовому */
+  --bg:#121214;
+  --surface:#1B1B1F;
+  --surface-2:#232329;
+  --line:#2E2E36;
+  --line-strong:#3D3D48;
+  --text:#ECECF1;
+  --muted:#9C9CAD;
+  --accent:#B9A6FF;
+  --danger:#FF6B6B;
+  --ok:#4ADE80;
+  --focus:rgba(185,166,255,.35);
+  --code-bg:#0E0E11;
+  --code-text:#E6E6EE;
+  --code-key:#C9B8FF;
+  --code-str:#9FE2A0;
+  --code-num:#8AB4F8;
+  --code-lit:#F28B82;
+  --radius:12px;
+  --shadow:none;
 }
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;font-size:14px;line-height:1.45;background:var(--bg);color:var(--text)}
+button,input,select,textarea{font:inherit;color:inherit}
 
-.tab-btn{
-    padding:12px 20px;
-    border:none;
-    border-radius:8px;
-    background:#dfe6f3;
-    cursor:pointer;
-    font-weight:700;
-}
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:20px;padding:0 20px;height:56px;background:var(--surface);border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;white-space:nowrap}
+.logo-mark{width:30px;height:30px;border-radius:8px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-weight:800;font-size:15px}
+.logo small{font-weight:500;color:var(--muted);font-size:13px}
+.tabs{display:flex;gap:4px;margin-left:8px}
+.tab{white-space:nowrap;border:0;background:transparent;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600;color:var(--muted)}
+.tab:hover{background:var(--surface-2);color:var(--text)}
+.tab.active{background:var(--brand);color:var(--brand-ink)}
+.tab[disabled]{cursor:not-allowed;opacity:.55}
+.tab .soon{font-size:10px;font-weight:600;margin-left:6px;padding:1px 6px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line)}
+.topbar .spacer{flex:1}
+.icon-btn{border:1px solid var(--line);background:var(--surface);width:34px;height:34px;border-radius:8px;cursor:pointer;display:grid;place-items:center}
+.icon-btn:hover{border-color:var(--line-strong)}
 
-.tab-btn.active{
-    background:#1a73e8;
-    color:white;
-}
+/* ---------- layout ---------- */
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr) minmax(360px,40%);gap:0;height:calc(100vh - 56px)}
+.nav{border-right:1px solid var(--line);background:var(--surface);overflow:auto;padding:14px 10px}
+.nav h6{margin:6px 10px 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.nav a{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:13px}
+.nav a:hover{background:var(--surface-2)}
+.nav a.active{background:var(--surface-2);font-weight:600}
+.nav a .dot{width:7px;height:7px;border-radius:50%;background:var(--line-strong);flex:none}
+.nav a.filled .dot{background:var(--ok)}
+.nav a.missing .dot{background:var(--danger)}
+.nav a .req{margin-left:auto;font-size:11px;color:var(--danger)}
 
-.tab-content{
-    display:none;
-}
+.main{overflow:auto;padding:20px 24px 80px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--line-strong)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn.primary:hover{filter:brightness(.96)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.danger{color:var(--danger)}
+.btn.sm{padding:5px 10px;font-size:12px}
+.switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;color:var(--muted);font-weight:500;margin-left:auto}
+.switch input{appearance:none;width:34px;height:20px;border-radius:99px;background:var(--line-strong);position:relative;cursor:pointer;transition:.15s}
+.switch input::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.15s}
+.switch input:checked{background:var(--brand)}
+.switch input:checked::after{left:16px}
+.search{flex:0 1 240px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
 
-.tab-content.active{
-    display:block;
-}
-    
-body{
-    font-family:Segoe UI,sans-serif;
-    background:#f5f7fb;
-    margin:0;
-    padding:20px;
-}
+/* ---------- sections ---------- */
+.section{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:14px;box-shadow:var(--shadow);scroll-margin-top:12px}
+.section>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 18px}
+.section>summary::-webkit-details-marker{display:none}
+.section>summary .chev{transition:transform .15s;color:var(--muted)}
+.section[open]>summary .chev{transform:rotate(90deg)}
+.section h3{margin:0;font-size:15px}
+.section>summary,.group>summary,.arr-head{flex-wrap:wrap;min-width:0}
+.section .key,.arr-head .key{overflow-wrap:anywhere;min-width:0}
+.section .key{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;color:var(--muted)}
+.section .badge{margin-left:auto}
+.section-body{padding:4px 18px 18px;border-top:1px solid var(--line)}
 
-.container{
-    max-width:1400px;
-    margin:auto;
-    background:white;
-    padding:25px;
-    border-radius:12px;
-    box-shadow:0 4px 20px rgba(0,0,0,.08);
-}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px 14px;margin-top:12px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:12px;font-weight:600;display:flex;gap:4px;align-items:baseline;flex-wrap:wrap}
+.field label .k{overflow-wrap:anywhere;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:400;color:var(--muted);font-size:11px}
+.star{color:var(--danger)}
+.guess{font-size:10px;padding:0 5px;border-radius:4px;background:rgba(185,166,255,.15);color:#C9B8FF;border:1px solid rgba(185,166,255,.4);cursor:help}
+.field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);outline:none;min-height:36px}
+.field textarea{resize:vertical;min-height:60px}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--focus)}
+.field.invalid input,.field.invalid select{border-color:var(--danger)}
+.field .const{padding:8px 10px;border:1px dashed var(--line-strong);border-radius:8px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;color:var(--muted);background:var(--surface-2)}
+.hint{font-size:11px;color:var(--muted)}
 
-h1{
-    color:#1a73e8;
-    text-align:center;
-}
+.group{grid-column:1/-1;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+.group>summary{list-style:none;cursor:pointer;padding:10px 14px;display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
+.group>summary::-webkit-details-marker{display:none}
+.group>summary .chev{transition:transform .15s;color:var(--muted);font-size:11px}
+.group[open]>summary .chev{transform:rotate(90deg)}
+.group>.grid{padding:0 14px 14px;margin-top:0}
+.group .group{background:var(--surface)}
 
-.section{
-    margin-top:25px;
-    border:1px solid #dce3ea;
-    border-radius:10px;
-    padding:20px;
-    background:#fafcff;
-}
+.note-row{grid-column:1/-1;display:grid;grid-template-columns:minmax(180px,1.2fr) minmax(160px,1fr) auto;gap:10px;align-items:end}
+.note-row .more{grid-column:1/-1}
 
-.section h2{
-    margin-top:0;
-    color:#1a73e8;
-}
+.arr{grid-column:1/-1}
+.arr-head{display:flex;align-items:center;gap:8px;margin:4px 0 8px}
+.arr-head .t{font-weight:600;font-size:13px}
+.arr-item{border:1px solid var(--line);border-radius:10px;background:var(--surface-2);margin-bottom:10px}
+.arr-item-head{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.arr-item-head .n{font-weight:700;font-size:12px;background:var(--brand);color:var(--brand-ink);border-radius:6px;padding:1px 8px}
+.arr-item-head .spacer{flex:1}
+.arr-item>.grid{padding:0 12px 12px}
+.arr-item .variant{padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);font-size:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:5px 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-height:36px}
+.chips:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--focus)}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:2px 4px 2px 8px;font-size:12px}
+.chip button{border:0;background:transparent;cursor:pointer;color:var(--muted);padding:0 3px}
+.chips input{border:0!important;box-shadow:none!important;flex:1;min-width:90px;min-height:24px!important;padding:2px 4px!important}
+.kv-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:6px}
+.empty-arr{font-size:12px;color:var(--muted);padding:2px 0 6px}
 
-.grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-    gap:15px;
-}
+.hidden-opt .field.opt,.hidden-opt .group.opt,.hidden-opt .arr.opt,.hidden-opt .note-row.opt{display:none}
+.search-miss{display:none!important}
 
-.field{
-    display:flex;
-    flex-direction:column;
-}
+/* ---------- preview ---------- */
+.preview{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--surface)}
+.preview-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.preview-head .t{font-weight:700}
+.preview-head .spacer{flex:1}
+.status{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:12px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-weight:600;font-size:12px}
+.pill.ok{background:rgba(30,142,62,.12);color:var(--ok)}
+.pill.warn{background:rgba(217,48,37,.1);color:var(--danger);cursor:pointer}
+.pill.info{background:var(--surface-2);color:var(--muted)}
+.missing-list{display:none;max-height:180px;overflow:auto;border-bottom:1px solid var(--line);padding:6px 14px;font-size:12px}
+.missing-list.open{display:block}
+.missing-list a{display:block;padding:3px 0;color:var(--danger);text-decoration:none;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;cursor:pointer}
+.missing-list a:hover{text-decoration:underline}
+pre.json{flex:1;margin:0;overflow:auto;padding:16px 18px;background:var(--code-bg);color:var(--code-text);font:12.5px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre;tab-size:2}
+.j-k{color:var(--code-key)}.j-s{color:var(--code-str)}.j-n{color:var(--code-num)}.j-l{color:var(--code-lit)}
 
-label{
-    font-size:12px;
-    margin-bottom:5px;
-    font-weight:600;
-}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--brand);color:var(--brand-ink);padding:10px 16px;border-radius:10px;opacity:0;transition:.2s;pointer-events:none;z-index:50;font-weight:600}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-input{
-    padding:10px;
-    border:1px solid #dce3ea;
-    border-radius:6px;
-}
+.flash{animation:flash 1.2s ease}
+@keyframes flash{0%,40%{box-shadow:0 0 0 4px var(--focus)}100%{box-shadow:none}}
 
-.item-card{
-    border:1px solid #dce3ea;
-    border-radius:8px;
-    padding:15px;
-    margin-top:15px;
-    background:white;
-    position:relative;
+@media (max-width:1100px){
+  .layout{grid-template-columns:minmax(0,1fr);height:auto}
+  .nav{display:none}
+  .preview{border-left:0;border-top:1px solid var(--line);height:70vh}
+  .main{overflow:visible}
 }
-
-.remove-btn{
-    position:absolute;
-    right:10px;
-    top:10px;
-    border:none;
-    background:#d93025;
-    color:white;
-    padding:5px 10px;
-    border-radius:5px;
-    cursor:pointer;
+@media (max-width:600px){
+  .topbar{gap:10px;padding:0 12px}
+  .logo small{display:none}
+  .tab[disabled]{display:none}
+  .layout,.main,.preview{max-width:100vw}
+  .main{padding:16px 16px 60px}
+  .note-row{grid-template-columns:1fr}
 }
-
-.buttons{
-    display:flex;
-    gap:10px;
-    margin-top:25px;
-    flex-wrap:wrap;
-}
-
-button{
-    border:none;
-    border-radius:6px;
-    padding:12px 18px;
-    cursor:pointer;
-    font-weight:700;
-}
-
-.primary{
-    background:#1a73e8;
-    color:white;
-}
-
-.green{
-    background:#188038;
-    color:white;
-}
-
-.red{
-    background:#d93025;
-    color:white;
-}
-
-#json-output{
-    margin-top:30px;
-    background:#111827;
-    color:#9effa1;
-    padding:20px;
-    border-radius:10px;
-    white-space:pre-wrap;
-    overflow:auto;
-    font-family:Consolas,monospace;
-    max-height:800px;
-}
-
 </style>
 </head>
 <body>
 
-<div class="container">
-
-<h1>📦 eTTN Generator</h1>
-<div class="tabs">
-
-    <button
-        class="tab-btn active"
-        onclick="openTab('ttn-tab', this)">
-        📦 Генератор ТТН
-    </button>
-
-    <button
-        class="tab-btn"
-        onclick="openTab('act-tab', this)">
-        📄 Генератор Актів
-    </button>
-
-</div>
-
-<div id="ttn-tab" class="tab-content active">
-    
-<!-- DOCUMENT -->
-
-<div class="section">
-<h2>1. ExchangedDocument</h2>
-
-<div class="grid">
-
-<div class="field">
-<label>ID документа</label>
-<input id="doc_id">
-</div>
-
-<div class="field">
-<label>Дата документа</label>
-<input type="datetime-local" id="doc_date">
-</div>
-
-<div class="field">
-<label>Місто оформлення</label>
-<input id="issue_name">
-</div>
-
-<div class="field">
-<label>Адреса оформлення</label>
-<input id="issue_desc">
-</div>
-
-</div>
-</div>
-
-<!-- CARRIER -->
-
-<div class="section">
-<h2>2. Перевізник</h2>
-
-<div class="grid">
-
-<div class="field">
-<label>Назва</label>
-<input id="carrier_name">
-</div>
-
-<div class="field">
-<label>ЄДРПОУ</label>
-<input id="carrier_id">
-</div>
-
-<div class="field">
-<label>ІПН</label>
-<input id="carrier_tax">
-</div>
-
-<div class="field">
-<label>Ліцензія</label>
-<input id="carrier_license">
-</div>
-
-<div class="field">
-<label>ПІБ водія</label>
-<input id="carrier_person">
-</div>
-
-</div>
-</div>
-
-<!-- TRUCK -->
-
-<div class="section">
-<h2>3. Автомобіль</h2>
-
-<div class="grid">
-
-<div class="field">
-<label>Марка</label>
-<input id="truck_brand">
-</div>
-
-<div class="field">
-<label>Модель</label>
-<input id="truck_model">
-</div>
-
-<div class="field">
-<label>Номер авто</label>
-<input id="truck_id">
-
-<div class="field">
-<label>ПІБ водія</label>
-<input id="driver_name">
-</div>
-
-<div class="field">
-<label>ІПН водія</label>
-<input id="driver_id">
-</div>
-
-<div class="field">
-<label>Посвідчення водія</label>
-<input id="driver_license">
-</div>
-
-<div class="field">
-<label>Телефон водія</label>
-<input id="driver_phone">
-</div>
-    
-</div>
-
-</div>
-</div>
-
-<!-- CUSTOMER -->
-
-<div class="section">
-<h2>4. Замовник</h2>
-
-<div class="grid">
-
-<div class="field">
-<label>ЄДРПОУ</label>
-<input id="customer_id">
-</div>
-
-<div class="field">
-<label>Назва</label>
-<input id="customer_name">
-</div>
-
-</div>
-</div>
-
-<!-- CONSIGNOR -->
-
-<div class="section">
-<h2>5. Вантажовідправник</h2>
-
-<div class="grid">
-
-<div class="field">
-<label>ЄДРПОУ</label>
-<input id="consignor_id">
-</div>
-
-<div class="field">
-<label>Назва</label>
-<input id="consignor_name">
-</div>
-
-</div>
-</div>
-
-<!-- CONSIGNEE -->
-
-<div class="section">
-<h2>6. Вантажоотримувач</h2>
-
-<div class="grid">
-
-<div class="field">
-<label>ЄДРПОУ</label>
-<input id="consignee_id">
-</div>
-
-<div class="field">
-<label>Назва</label>
-<input id="consignee_name">
-</div>
-
-</div>
-</div>
-
-<!-- LOAD -->
-
-<div class="section">
-<h2>7. Завантаження</h2>
-
-<div class="grid">
-
-<div class="field">
-<label>ID точки</label>
-<input id="load_id">
-</div>
-
-<div class="field">
-<label>Місто</label>
-<input id="load_name">
-</div>
-
-<div class="field">
-<label>Адреса</label>
-<input id="load_desc">
-</div>
-
-<div class="field">
-<label>TypeCode</label>
-<input type="number" id="load_type">
-</div>
-
-</div>
-</div>
-
-<!-- UNLOAD -->
-
-<div class="section">
-<h2>8. Розвантаження</h2>
-
-<div class="grid">
-
-<div class="field">
-<label>ID точки</label>
-<input id="unload_id">
-</div>
-
-<div class="field">
-<label>Місто</label>
-<input id="unload_name">
-</div>
-
-<div class="field">
-<label>Адреса</label>
-<input id="unload_desc">
-</div>
-
-<div class="field">
-<label>TypeCode</label>
-<input type="number" id="unload_type">
-</div>
-
-</div>
-</div>
-
-<!-- COMMON -->
-
-<div class="section">
-<h2>9. Загальні дані</h2>
-
-<div class="grid">
-
-<div class="field">
-<label>Загальна вага</label>
-<input type="number" id="gross_weight">
-</div>
-
-<div class="field">
-<label>Загальна сума</label>
-<input type="number" id="invoice_amount">
-</div>
-
-<div class="field">
-<label>Кількість місць</label>
-<input type="number" id="items_qty">
-</div>
-
-</div>
-</div>
-
-<!-- ITEMS -->
-
-<div class="section">
-<h2>9.1 Обов'язкові поля V2</h2>
-
-<div class="grid">
-
-<div class="field">
-<label>Текст ваги</label>
-<input id="gross_weight_text">
-</div>
-
-<div class="field">
-<label>ПДВ сума</label>
-<input type="number" id="vat_amount">
-</div>
-
-<div class="field">
-<label>Текст ПДВ</label>
-<input id="vat_amount_text">
-</div>
-
-<div class="field">
-<label>Довжина авто</label>
-<input type="number" step="0.01" id="vehicle_length">
-</div>
-
-<div class="field">
-<label>Ширина авто</label>
-<input type="number" step="0.01" id="vehicle_width">
-</div>
-
-<div class="field">
-<label>Висота авто</label>
-<input type="number" step="0.01" id="vehicle_height">
-</div>
-
-<div class="field">
-<label>Вага авто з вантажем</label>
-<input type="number" step="0.01" id="gross_vehicle_weight">
-<div class="field">
-<label>Номер пломби</label>
-<input id="seal_number">
-</div>
-
-<div class="field">
-<label>Особливі примітки</label>
-<input id="special_notes">
-</div>
-
-<div class="field">
-<label>Температура мін.</label>
-<input id="truck_temp_min">
-</div>
-
-<div class="field">
-<label>Температура макс.</label>
-<input id="truck_temp_max">
-</div>
-
-<div class="field">
-<label>Колір авто</label>
-<input id="truck_color">
-</div>
-
-<div class="field">
-<label>Тип авто</label>
-<input id="truck_type">
-</div>
-
-<div class="field">
-<label>Країна реєстрації</label>
-<input id="truck_country">
-</div>
-    
-</div>
-
-</div>
-</div>
-    
-<div class="section">
-
-<h2>10. Товари</h2>
-
-<div id="items-container"></div>
-
-<button class="green" onclick="addItem()">
-+ Додати товар
-</button>
-
-</div>
-
-<div class="buttons">
-
-<button class="primary" onclick="generateJSON()">
-СФОРМУВАТИ JSON
-</button>
-
-<button class="green" onclick="copyJSON()">
-КОПІЮВАТИ
-</button>
-
-<button class="green" onclick="downloadJSON()">
-СКАЧАТИ
-</button>
-
-<button class="red" onclick="clearForm()">
-ОЧИСТИТИ
-</button>
-
-</div>
-
-<pre id="json-output"></pre>
-
-</div>
-
-</div>
-
-<div id="act-tab" class="tab-content">
-
-<div class="section">
-<h2>📄 Генератор Актів</h2>
-
-<div class="grid">
-
-<div class="field">
-<label>ID документа</label>
-<input id="act_doc_id">
-</div>
-
-<div class="field">
-<label>Дата документа</label>
-<input type="datetime-local" id="act_doc_date">
-</div>
-
-<div class="field">
-<label>Місце складання</label>
-<input id="act_place">
-</div>
-
-<div class="field">
-<label>Адреса</label>
-<input id="act_place_desc">
-</div>
-
-<div class="field">
-<label>Коментар</label>
-<input id="act_remarks">
-</div>
-
-<div class="field">
-<label>Тип акту</label>
-<select id="act_type">
-<option value="reject">reject</option>
-</select>
-</div>
-
-</div>
-</div>
-
-<div class="section">
-<h2>📝 Reject Payload</h2>
-
-<div class="grid">
-
-<div class="field">
-<label>Примітка відправника</label>
-<input id="consignor_notes">
-</div>
-
-<div class="field">
-<label>Примітка перевізника</label>
-<input id="carrier_notes">
-</div>
-
-</div>
-</div>
-
-<div class="section">
-<h2>👤 Відправника</h2>
-
-<div class="grid">
-
-<div class="field">
-<label>ЄДРПОУ</label>
-<input id="consignor_cert_id">
-</div>
-
-<div class="field">
-<label>Назва</label>
-<input id="consignor_cert_name">
-</div>
-
-<div class="field">
-<label>ПІБ</label>
-<input id="consignor_cert_person">
-</div>
-
-</div>
-</div>
-
-<div class="section">
-<h2>🚚 Перевізника</h2>
-
-<div class="grid">
-
-<div class="field">
-<label>ЄДРПОУ</label>
-<input id="carrier_cert_id">
-</div>
-
-<div class="field">
-<label>Назва</label>
-<input id="carrier_cert_name">
-</div>
-
-<div class="field">
-<label>ПІБ</label>
-<input id="carrier_cert_person">
-</div>
-
-</div>
-</div>
-
-<div class="buttons">
-
-<button class="primary" onclick="generateActJSON()">
-СФОРМУВАТИ ACT JSON
-</button>
-
-<button class="green" onclick="copyActJSON()">
-КОПІЮВАТИ
-</button>
-
-</div>
-
-<pre id="act-json-output"></pre>
-
-</div>
-    
-<script>
-
-document.getElementById('doc_date').value =
-new Date().toISOString().slice(0,16);
-
-function val(id){
-    return document.getElementById(id).value.trim();
-}
-
-function clean(obj){
-
-    if(Array.isArray(obj)){
-
-        const arr = obj
-            .map(clean)
-            .filter(v => v !== undefined);
-
-        return arr.length ? arr : undefined;
-    }
-
-    if(obj !== null && typeof obj === 'object'){
-
-        const newObj = {};
-
-        Object.keys(obj).forEach(key => {
-
-            const cleaned = clean(obj[key]);
-
-            if(cleaned !== undefined){
-                newObj[key] = cleaned;
-            }
-        });
-
-        return Object.keys(newObj).length
-            ? newObj
-            : undefined;
-    }
-
-    if(
-        obj === undefined ||
-        obj === null ||
-        obj === ''
-    ){
-        return undefined;
-    }
-
-    return obj;
-}
-
-function addItem(){
-
-    const div = document.createElement('div');
-
-    div.className = 'item-card';
-
-    div.innerHTML = `
-
-    <button class="remove-btn" onclick="this.parentElement.remove()">X</button>
-
-    <div class="grid">
-
-        <div class="field">
-            <label>Назва товару</label>
-            <input class="itm-name">
-        </div>
-
-        <div class="field">
-            <label>Вага</label>
-            <input type="number" class="itm-weight">
-        </div>
-
-        <div class="field">
-            <label>Кількість</label>
-            <input type="number" class="itm-qty">
-        </div>
-
-        <div class="field">
-            <label>Тип</label>
-            <input class="itm-type">
-        </div>
-
-        <div class="field">
-            <label>TypeCode</label>
-            <input class="itm-code">
-        </div>
-
+<header class="topbar">
+  <div class="logo"><div class="logo-mark">В</div>Вчасно.ТТН <small>JSON генератор</small></div>
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="ttn">ТТН V2</button>
+    <button class="tab" disabled title="Наступний етап">Імпорт JSON <span class="soon">скоро</span></button>
+  </nav>
+  <div class="spacer"></div>
+</header>
+
+<div class="layout">
+  <aside class="nav" id="nav"><h6>Розділи</h6></aside>
+
+  <main class="main" id="main">
+    <div class="toolbar">
+      <input class="search" id="search" type="search" placeholder="Пошук поля…" aria-label="Пошук поля">
+      <button class="btn" id="sampleBtn" title="Заповнити форму тестовими даними">Заповнити прикладом</button>
+      <button class="btn" id="expandBtn">Розгорнути все</button>
+      <button class="btn ghost danger" id="clearBtn">Очистити</button>
+      <label class="switch"><input type="checkbox" id="optToggle" checked> Необов'язкові поля</label>
     </div>
-    `;
+    <div id="form"></div>
+  </main>
 
-    document.getElementById(
-        'items-container'
-    ).appendChild(div);
+  <section class="preview" aria-label="Попередній перегляд JSON">
+    <div class="preview-head">
+      <span class="t">JSON</span><span class="hint">POST /api/public/ttns/json</span>
+      <span class="spacer"></span>
+      <button class="btn sm" id="copyBtn">Копіювати</button>
+      <button class="btn sm primary" id="dlBtn">Скачати</button>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="missing-list" id="missingList"></div>
+    <pre class="json" id="out"></pre>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   Схеми побудовані з OpenAPI Вчасно.ТТН (модель TTNGenericV2Request).
+   Згенеровано скриптом — не редагуйте вручну, щоб додати поле,
+   оновіть схему.
+   ============================================================ */
+const DEFS = {"TTNGenericV2Request":{"type":"object","properties":{"ttn_type":{"type":"string","const":"generic","default":"generic","description":"Тип ТТН"},"schema_version":{"type":"integer","const":2,"default":2,"description":"Версія схеми"},"document_package_id":{"nullable":true,"type":"string","maxLength":255,"description":"Ідентифікатор пакета документів для інтеграції EDO. Використовується для зв'язку TTN з документом EDO."},"pickup_geo_point_id":{"nullable":true,"type":"string","format":"uuid4","description":"Ідентифікатор геоточок забору"},"delivery_geo_point_id":{"nullable":true,"type":"string","format":"uuid4","description":"Ідентифікатор геоточок доставки"},"ExchangedDocument":{"$ref":"ExchangedDocumentSchemaV2","description":"Реквізити ТТН"},"SpecifiedSupplyChainConsignment":{"$ref":"SpecifiedSupplyChainConsignmentExtendedValidatedV2","description":"Інформація про перевезення"}},"required":["ExchangedDocument","SpecifiedSupplyChainConsignment"],"description":"Схема запиту для універсальних документів TTN версії 2."},"SpecifiedSupplyChainConsignmentExtendedValidatedV2":{"type":"object","properties":{"TransportEquipmentTruck":{"$ref":"TruckSchemaV2","description":"Відомості про транспорт (автомобіль)"},"TransportEquipmentTrailer":{"type":"array","description":"Відомості про транспорт (причіп/напівпричіп)","items":{"$ref":"TrailerSchemaV2"}},"TransportEquipmentContainer":{"type":"array","description":"Відомості про транспорт (контейнер)","items":{"$ref":"TransportContainerSchemaV2"}},"ConsignorTradeParty":{"$ref":"ConsignorTradePartySchemaV2","description":"Вантажовідправник"},"ConsigneeTradeParty":{"$ref":"ConsigneeTradePartySchemaV2","description":"Вантажоодержувач"},"CarrierTradeParty":{"$ref":"CarrierTradePartySchemaV2","description":"Перевізник"},"ForwarderTradeParty":{"nullable":true,"$ref":"ForwarderTradePartySchemaV2","description":"Експедитор"},"CustomerTradeParty":{"$ref":"CustomerTradePartySchemaV2","description":"Замовник"},"TransitWHTradeParty":{"nullable":true,"$ref":"TransitWHTradePartySchemaV2","description":"проміжний склад"},"GuardTradeParty":{"nullable":true,"$ref":"GuardTradePartySchemaV2","description":"Компанія, що надає охоронні послуги"},"ThirdParties":{"type":"array","description":"Інші учасники перевезення (за потреби)","items":{"$ref":"ThirdPartyActorSchemaV2"}},"DeliveryInstructions":{"nullable":true,"$ref":"DeliveryInstructionsSchemaBase","description":"Вид перевезення"},"CarrierAcceptanceLogisticsLocation":{"$ref":"AcceptanceLocationSchemaV2","description":"Пункт Завантаження"},"ConsigneeReceiptLogisticsLocation":{"$ref":"ReceiptLocationSchemaV2","description":"Пункт Завантаження"},"AssociatedReferencedDocument":{"type":"array","description":"Супровідні документи","items":{"anyOf":[{"$ref":"DigitalReferencedDocumentSchemaBase"},{"$ref":"ReferencedDocumentSchema"}]}},"MainCarriageLogisticsTransportMovement":{"nullable":true,"$ref":"LogisticsMovementSchemaBase","description":"Маршрутизація (проміжні пункти) перевантаження)"},"GrossWeightMeasure":{"nullable":true,"type":"number","minimum":0.1,"description":"Вага, в кілограмах"},"AssociatedInvoiceAmount":{"nullable":true,"type":"number","minimum":0.0,"description":"Сума, грн"},"GrossWeightMeasureTonnes":{"nullable":true,"type":"number","minimum":0.0001,"description":"Вага, в тоннах"},"DeliveryTransportEvent":{"nullable":true,"$ref":"DeliveryTransportEventExtendedValidatedV2","description":"Розвантажувальні роботи"},"PickUpTransportEvent":{"nullable":true,"$ref":"PickUpTransportEventExtendedValidatedV2","description":"Навантажувальні роботи"},"SupplyChainItems":{"type":"array","items":{"$ref":"SupplyItemSchemaExtendedValidatedV2"}}},"required":["TransportEquipmentTruck","ConsignorTradeParty","ConsigneeTradeParty","CarrierTradeParty","CustomerTradeParty","CarrierAcceptanceLogisticsLocation","ConsigneeReceiptLogisticsLocation","SupplyChainItems"]},"SupplyItemSchemaExtendedValidatedV2":{"type":"object","properties":{"SequenceNumeric":{"type":"integer","description":"Порядковий номер"},"InvoiceAmount":{"nullable":true,"type":"number","minimum":0.0,"description":"Загальна сума з ПДВ, грн"},"GrossWeightMeasure":{"type":"number","minimum":0.1,"description":"Вага, в кілограмах"},"TariffQuantity":{"nullable":true,"type":"number","minimum":0.0,"description":"Ціна без ПДВ за одиницю, грн"},"GlobalID":{"nullable":true,"type":"string","description":"Код УКТЗЕД продукції"},"NatureIdentificationTransportCargo":{"type":"string","description":"Найменування вантажу"},"ApplicableTransportDangerousGoods":{"nullable":true,"$ref":"DangerousGoodSchemaBase","description":"Клас небезпечних речовин"},"AssociatedReferencedLogisticsTransportEquipment":{"nullable":true,"type":"string","description":"Номер контейнера"},"TransportLogisticsPackage":{"nullable":true,"$ref":"TransportPackageSchemaBase","description":"Транспортна упаковка"},"VendorCode":{"nullable":true,"type":"string","description":"Артикул товару"},"Quantity":{"nullable":true,"type":"string","description":"Кількість товару","guessed":true},"Url":{"nullable":true,"type":"string","description":"Посилання на документ"},"BaseUOM":{"nullable":true,"type":"string","description":"Одиниця виміру кількості товарів"},"BuyerCode":{"nullable":true,"type":"string","description":"Артикул покупця"},"PriceWithVAT":{"nullable":true,"type":"string","description":"ціна за одиницю з ПДВ"},"SumWithoutVAT":{"nullable":true,"type":"string","description":"Загальна сума без ПДВ"},"ReturnTare":{"nullable":true,"type":"string","description":"Ознака 'зворотня тара'"},"NetWeight":{"nullable":true,"type":"string","description":"Маса нетто"},"RtpType":{"nullable":true,"type":"string","description":"Тип транспортної упаковки"},"RtpName":{"nullable":true,"type":"string","description":"Назва транспортної упаковки"},"RtpQuantity":{"nullable":true,"type":"string","description":"Кількість транспортної упаковки"},"AssociatedReferencedDocument":{"type":"array","description":"Документи з вантажем","items":{"$ref":"ReferencedDocumentSchema"}},"TransportationMinTemperature":{"nullable":true,"type":"string","description":"Температурний режим транспортування (мінімум)"},"TransportationMaxTemperature":{"nullable":true,"type":"string","description":"Температурний режим транспортування (максимум)"},"AnimalId":{"nullable":true,"type":"string","description":"Ідентифікаційний номер тварини, від якого отримано сировину"},"AnimalType":{"nullable":true,"type":"string","description":"Вид тварин, від яких отримано сировину"},"SKBOrder":{"nullable":true,"type":"string","description":"Номер замовлення СКБ"},"GrossWeightMeasureTonnes":{"nullable":true,"type":"number","minimum":0.0001,"description":"Вага, в тоннах"}},"required":["SequenceNumeric","GrossWeightMeasure","NatureIdentificationTransportCargo"]},"ReferencedDocumentSchema":{"type":"object","properties":{"ID":{"nullable":true,"type":"string","description":"Номер документа"},"Remarks":{"nullable":true,"type":"string","description":"Примітки"},"TypeCode":{"nullable":true,"type":"integer","minimum":1.0,"maximum":998.0,"description":"Код документа для довідника"},"FormattedIssueDateTime":{"nullable":true,"type":"string","format":"date-time","description":"Дані документ"}}},"TransportPackageSchemaBase":{"type":"object","properties":{"ItemQuantity":{"nullable":true,"type":"number","description":"Кількість місць"},"TypeCode":{"nullable":true,"type":"string","description":"Вид пакування (значення з довідника)"},"Type":{"nullable":true,"type":"string","description":"Одиниця виміру"},"Marking":{"nullable":true,"type":"string","description":"Вільна назва транспортної упаковки"},"Barcode":{"nullable":true,"type":"string","description":"Штрихкод товару"}}},"DangerousGoodSchemaBase":{"type":"object","properties":{"UNDGIdentificationCode":{"type":"string","description":"Код ООН небезпечного вантажу"},"PackagingDangerLevelCode":{"type":"integer","minimum":1,"maximum":4,"description":"Рівень безпеки пакування"}},"required":["UNDGIdentificationCode","PackagingDangerLevelCode"]},"PickUpTransportEventExtendedValidatedV2":{"type":"object","properties":{"ActualOccurrenceDateTime":{"nullable":true,"type":"string","format":"date-time","description":"Дата та час прибуття"},"ScheduledOccurrenceDateTime":{"nullable":true,"type":"string","format":"date-time","description":"Дата та час відправлення"},"Grossweight":{"nullable":true,"type":"number","minimum":0.1,"description":"Вага, в кілограмах"},"Downtime":{"nullable":true,"type":"string","description":"Час простою (наприклад - 1год 10хв)"},"DriverTradeParty":{"type":"array","description":"Інформація про водія Перевізника","items":{"$ref":"SimpleDriverSchema"}},"CarrierTradeParty":{"type":"array","description":"Інформація про відповідні особи Перевізника","items":{"$ref":"SimpleCarrierSchema"}},"ForwarderTradeParty":{"type":"array","description":"Інформація про відповідні особи Експедитора","items":{"$ref":"SimpleForwarderSchema"}},"ConsignorTradeParty":{"type":"array","description":"Інформація про відповідні особи Вантажовідправника","items":{"$ref":"SimpleConsignorSchema"}},"UnloadingTareWeight":{"nullable":true,"type":"number","minimum":0.1,"description":"Вага, в кілограмах"},"NetWeight":{"nullable":true,"type":"number","minimum":0.1,"description":"Вага, у кілограмах"},"GrossweightTonnes":{"nullable":true,"type":"number","minimum":0.0001,"description":"Вага, в тоннах"},"NetWeightTonnes":{"nullable":true,"type":"number","minimum":0.0001,"description":"Вага, в тоннах"},"UnloadingTareWeightTonnes":{"nullable":true,"type":"number","minimum":0.0001,"description":"Вага, в тоннах"}}},"SimpleConsignorSchema":{"type":"object","properties":{"RoleCode":{"type":"string","const":"CZ","default":"CZ","description":"Роль учасника - вантажовідправник"},"ID":{"nullable":true,"type":"string","description":"Ідентифікаційний код / ЄДРПОУ"},"Name":{"type":"string","description":"Повне найменування"},"PersonName":{"nullable":true,"type":"string","description":"ПІБ"}},"required":["Name"]},"SimpleForwarderSchema":{"type":"object","properties":{"RoleCode":{"type":"string","const":"FW","default":"FW","description":"експедитор"},"ID":{"nullable":true,"type":"string","description":"Ідентифікаційний код / ​​ЄДРПОУ"},"Name":{"type":"string","description":"Повне найменування"},"PersonName":{"nullable":true,"type":"string","description":"ПІБ"}},"required":["Name"]},"SimpleCarrierSchema":{"type":"object","properties":{"RoleCode":{"type":"string","const":"CA","default":"CA","description":"перевізник"},"ID":{"nullable":true,"type":"string","description":"Ідентифікаційний код / ЄДРПОУ"},"Name":{"type":"string","description":"Повне найменування"},"PersonName":{"nullable":true,"type":"string","description":"ПІБ"}},"required":["Name"]},"SimpleDriverSchema":{"type":"object","properties":{"RoleCode":{"type":"string","const":"DR","default":"DR","description":"водій"},"ID":{"nullable":true,"type":"string","description":"Ідентифікаційний код / ЄДРПОУ"},"Name":{"type":"string","description":"Повне найменування"},"PersonName":{"nullable":true,"type":"string","description":"ПІБ"}},"required":["Name"]},"DeliveryTransportEventExtendedValidatedV2":{"type":"object","properties":{"ActualOccurrenceDateTime":{"nullable":true,"type":"string","format":"date-time","description":"Дата та час прибуття"},"ScheduledOccurrenceDateTime":{"nullable":true,"type":"string","format":"date-time","description":"Дата і час відправлення"},"Grossweight":{"nullable":true,"type":"number","minimum":0.1,"description":"Вага, в кілограмах"},"Downtime":{"nullable":true,"type":"string","description":"Час простою (наприклад - 1год 10хв)"},"DriverTradeParty":{"type":"array","description":"Інформація про водія Перевізника","items":{"$ref":"SimpleDriverSchema"}},"CarrierTradeParty":{"type":"array","description":"Інформація про відповідні особи Перевізника","items":{"$ref":"SimpleCarrierSchema"}},"ForwarderTradeParty":{"type":"array","description":"Інформація про відповідні особи Експедитора","items":{"$ref":"SimpleForwarderSchema"}},"ConsigneeTradeParty":{"type":"array","description":"Інформація про відповідні особи Вантажоотримача","items":{"$ref":"SimpleConsigneeSchema"}},"UnloadingTareWeight":{"nullable":true,"type":"number","minimum":0.1,"description":"Вага, в кілограмах"},"NetWeight":{"nullable":true,"type":"number","minimum":0.1,"description":"Вага, у кілограмах"},"QualityCharacteristics":{"nullable":true,"type":"object","examples":[{"MOISTUSDA":"14%","PROTEIN":"15%"}],"freeform":true,"description":"Показники якості вантажу (KPRX-коди → значення).Порожній об'єкт очищає всі показники."},"GrossweightTonnes":{"nullable":true,"type":"number","minimum":0.0001,"description":"Вага, в тоннах"},"NetWeightTonnes":{"nullable":true,"type":"number","minimum":0.0001,"description":"Вага, в тоннах"},"UnloadingTareWeightTonnes":{"nullable":true,"type":"number","minimum":0.0001,"description":"Вага, в тоннах"}}},"SimpleConsigneeSchema":{"type":"object","properties":{"RoleCode":{"type":"string","const":"CN","default":"CN","description":"вантажоперевізник"},"ID":{"nullable":true,"type":"string","description":"Ідентифікаційний код / ​​ЄДРПОУ"},"Name":{"type":"string","description":"Повне найменування"},"PersonName":{"nullable":true,"type":"string","description":"ПІБ"}},"required":["Name"]},"LogisticsMovementSchemaBase":{"type":"object","properties":{"ModeCode":{"type":"integer","const":3,"default":3,"description":"Код (завжди одне значення - 3, Завантаження лише використання для дорожніх перевезень)"},"SpecifiedEvents":{"type":"array","description":"Проміжне розвантаження","items":{"$ref":"SpecifiedTransportEventSchemaBase"}}},"required":["SpecifiedEvents"]},"SpecifiedTransportEventSchemaBase":{"type":"object","properties":{"ID":{"type":"string","description":"Порядковий номер події"},"TypeCode":{"$ref":"SpecifiedEventCode","description":"Тип операції (завантаження/розвантаження)"},"Description":{"nullable":true,"type":"string","description":"Опис"},"OccurrenceLocation":{"$ref":"SpecifiedLocationSchemaBase","description":"Місцезнаходження"},"CertifyingTradeParty":{"$ref":"TransitWHTradePartySchemaBase","description":"Юридична особа Проміжний склад"}},"required":["ID","TypeCode","OccurrenceLocation","CertifyingTradeParty"]},"TransitWHTradePartySchemaBase":{"type":"object","properties":{"RoleCode":{"type":"string","const":"WD","default":"WD","description":"Роль учасника - проміжний склад"},"ID":{"type":"string","description":"Ідентифікаційний код / ​​ЄДРПОУ"},"Name":{"type":"string","description":"Повне найменування"},"PostalTradeAddress":{"nullable":true,"$ref":"AddressSchema","description":"Юридична адреса"},"DefinedTradeContact":{"nullable":true,"$ref":"BaseTradeContactSchema","description":"Контактні/відповідальні особи"},"SpecifiedTaxRegistration":{"nullable":true,"type":"string","description":"Ідентифікаційний код в.о."}},"required":["ID","Name"]},"BaseTradeContactSchema":{"type":"object","properties":{"PersonName":{"nullable":true,"type":"string","description":"ПІБ"},"TelephoneUniversalCommunication":{"nullable":true,"$ref":"Phone","description":"Основний телефон"},"MobileTelephoneUniversalCommunication":{"nullable":true,"$ref":"Phone","description":"Мобільний телефон"},"EmailURIUniversalCommunication":{"nullable":true,"$ref":"Email","description":"Електронна пошта"}}},"Email":{"type":"object","properties":{"CompleteNumber":{"type":"string","format":"email","description":"Електронна пошта"}},"required":["CompleteNumber"]},"Phone":{"type":"object","properties":{"CompleteNumber":{"type":"string","description":"Номер телефону"}},"required":["CompleteNumber"]},"AddressSchema":{"type":"object","properties":{"PostcodeCode":{"nullable":true,"type":"string","description":"Індекс"},"StreetName":{"nullable":true,"type":"string","description":"Адреса (назва вулиці і номер будівлі)"},"CityName":{"nullable":true,"type":"string","description":"Місто"},"CountryID":{"type":"string","const":"UA","default":"UA","description":"Країна"},"CountrySubDivisionName":{"nullable":true,"type":"string","description":"Область та район (за наявність)"}}},"SpecifiedLocationSchemaBase":{"type":"object","properties":{"Name":{"nullable":true,"type":"string","description":"Найменування відповідно"},"Description":{"nullable":true,"type":"string","description":"Адреса та додаткова інформація за відповідністю"},"ID":{"type":"string","description":"Код КАТОТТГ"},"PhysicalGeographicalCoordinate":{"nullable":true,"$ref":"OptionalCoordinatesSchema","description":"Координати"},"TypeCode":{"$ref":"SpecifiedEventCode","description":"Порада операції (Навантаження/розвантаження)"}},"required":["ID","TypeCode"]},"SpecifiedEventCode":{"type":"integer","enum":[5,10],"description":""},"OptionalCoordinatesSchema":{"type":"object","properties":{"LatitudeMeasure":{"nullable":true,"type":"string","description":"широта"},"LongitudeMeasure":{"nullable":true,"type":"string","description":"довгота"}}},"DigitalReferencedDocumentSchemaBase":{"type":"object","properties":{"ID":{"nullable":true,"type":"string","description":"Номер документа"},"Remarks":{"nullable":true,"type":"string","description":"Примітки"},"TypeCode":{"nullable":true,"type":"integer","minimum":1.0,"maximum":998.0,"description":"Код документа за довідником"},"FormattedIssueDateTime":{"nullable":true,"type":"string","format":"date-time","description":"Дата документа"},"uid":{"type":"string","format":"uuid4","description":"Ідентифікатор завантаженого файлу документа"},"doc_file_saved":{"type":"boolean","default":true,"description":"Значення вказує, чи був цей документ збережений у нас у системі (Технічне)"}},"required":["uid"]},"ReceiptLocationSchemaV2":{"type":"object","properties":{"Name":{"type":"string","default":"Місце складання документа","description":"Найменування локації"},"Description":{"type":"string","description":"Адреса (наприклад - '79000, м.Львів, вул. Словацького, 1')"},"ID":{"type":"string","description":"Код КАТОТТГ"},"PhysicalGeographicalCoordinate":{"nullable":true,"$ref":"OptionalCoordinatesSchema","description":"Координати"},"TypeCode":{"type":"integer","const":5,"default":5,"description":"тип операції - розвантаження"},"GLN":{"nullable":true,"type":"string","description":"GLN пункт розвантаження"}},"required":["Description","ID"]},"AcceptanceLocationSchemaV2":{"type":"object","properties":{"Name":{"type":"string","default":"Місце складання документа","description":"Найменування локації"},"Description":{"type":"string","description":"Адреса (наприклад - '79000, м.Львів, вул. Словацького, 1')"},"ID":{"type":"string","description":"Код КАТОТТГ"},"PhysicalGeographicalCoordinate":{"nullable":true,"$ref":"OptionalCoordinatesSchema","description":"Координати"},"TypeCode":{"type":"integer","const":10,"default":10,"description":"тип операції - навантаження"},"GLN":{"nullable":true,"type":"string","description":"GLN пункту загрузки"}},"required":["Description","ID"]},"DeliveryInstructionsSchemaBase":{"type":"object","properties":{"Description":{"type":"string","description":"опис"},"DescriptionCode":{"type":"string","default":"ТИП_ТРАНСПОРТУ","description":"код"}},"required":["Description"]},"ThirdPartyActorSchemaV2":{"type":"object","properties":{"RoleCode":{"type":"string","const":"OJ","default":"OJ","description":"Роль учасника - третя сторона"},"ID":{"type":"string","description":"Ідентифікаційний код / ЄДРПОУ"},"Name":{"type":"string","description":"Повне найменування"},"PostalTradeAddress":{"nullable":true,"$ref":"AddressSchema","description":"Юридична адреса"},"DefinedTradeContact":{"nullable":true,"$ref":"BaseTradeContactSchema","description":"Контактні/відповідальні особи"},"SpecifiedTaxRegistration":{"nullable":true,"type":"string","description":"Ідентифікаційний код в.о."},"TradePartyUNZR":{"nullable":true,"type":"string","description":"УНЗР учасника"},"TradePartyGLN":{"nullable":true,"type":"string","description":"GLN учасника"}},"required":["ID","Name"]},"GuardTradePartySchemaV2":{"type":"object","properties":{"ID":{"type":"string","description":"Ідентифікаційний код / ЄДРПОУ"},"Name":{"type":"string","description":"Повне найменування"},"RoleCode":{"type":"string","const":"COP","default":"COP","description":"Роль учасника - Компанія,що надає охоронні послуги"},"PersonName":{"nullable":true,"type":"string","description":"ПІБ"},"TradePartyUNZR":{"nullable":true,"type":"string","description":"УНЗР учасника"},"TradePartyGLN":{"nullable":true,"type":"string","description":"GLN учасника"}},"required":["ID","Name"]},"TransitWHTradePartySchemaV2":{"type":"object","properties":{"RoleCode":{"type":"string","const":"WD","default":"WD","description":"Роль учасника - проміжний склад"},"ID":{"type":"string","description":"Ідентифікаційний код / ​​ЄДРПОУ"},"Name":{"type":"string","description":"Повне найменування"},"PostalTradeAddress":{"nullable":true,"$ref":"AddressSchema","description":"Юридична адреса"},"DefinedTradeContact":{"nullable":true,"$ref":"BaseTradeContactSchema","description":"Контактні/відповідальні особи"},"SpecifiedTaxRegistration":{"nullable":true,"type":"string","description":"Ідентифікаційний код в.о."},"TradePartyUNZR":{"nullable":true,"type":"string","description":"УНЗР учасника"},"TradePartyGLN":{"nullable":true,"type":"string","description":"GLN учасника"}},"required":["ID","Name"]},"CustomerTradePartySchemaV2":{"type":"object","properties":{"RoleCode":{"type":"string","const":"OB","default":"OB","description":"Роль учасника - замовник"},"ID":{"type":"string","description":"Ідентифікаційний код / ЄДРПОУ"},"Name":{"type":"string","description":"Повне найменування"},"PostalTradeAddress":{"nullable":true,"$ref":"AddressSchema","description":"Юридична адреса"},"DefinedTradeContact":{"nullable":true,"$ref":"BaseTradeContactSchema","description":"Контактні/відповідальні особи"},"SpecifiedTaxRegistration":{"nullable":true,"type":"string","description":"Ідентифікаційний код в.о."},"TradePartyUNZR":{"nullable":true,"type":"string","description":"УНЗР учасника"},"TradePartyGLN":{"nullable":true,"type":"string","description":"GLN учасника"}},"required":["ID","Name"]},"ForwarderTradePartySchemaV2":{"type":"object","properties":{"RoleCode":{"type":"string","const":"FW","default":"FW","description":"Роль учасника - експедитор"},"ID":{"type":"string","description":"Ідентифікаційний код / ЄДРПОУ"},"Name":{"type":"string","description":"Повне найменування"},"PostalTradeAddress":{"nullable":true,"$ref":"AddressSchema","description":"Юридична адреса"},"DefinedTradeContact":{"nullable":true,"$ref":"BaseTradeContactSchema","description":"Контактні/відповідальні особи"},"SpecifiedTaxRegistration":{"nullable":true,"type":"string","description":"Ідентифікаційний код в.о."},"TradePartyUNZR":{"nullable":true,"type":"string","description":"Учасник УНЗР"},"TradePartyGLN":{"nullable":true,"type":"string","description":"GLN учасника"}},"required":["ID","Name"]},"CarrierTradePartySchemaV2":{"type":"object","properties":{"RoleCode":{"type":"string","const":"CA","default":"CA","description":"Роль учасника - перевізник"},"ID":{"type":"string","description":"Ідентифікаційний код / ЄДРПОУ"},"Name":{"type":"string","description":"Повне найменування"},"PostalTradeAddress":{"nullable":true,"$ref":"AddressSchema","description":"Юридична адреса"},"DefinedTradeContact":{"nullable":true,"$ref":"CarrierTradeContactSchemaBase","description":"Контактні/відповідальні особи"},"SpecifiedTaxRegistration":{"type":"string","description":"Ідентифікаційний код водія"},"SpecifiedGovernmentRegistration":{"type":"string","description":"Номер посвідчення водія"},"TradePartyUNZR":{"nullable":true,"type":"string","description":"УНЗР учасника"},"TradePartyGLN":{"nullable":true,"type":"string","description":"GLN учасника"},"DriverUNZR":{"nullable":true,"type":"string","description":"УНЗР водія"},"DriverGLN":{"nullable":true,"type":"string","description":"GLN водія"}},"required":["ID","Name","SpecifiedTaxRegistration","SpecifiedGovernmentRegistration"]},"CarrierTradeContactSchemaBase":{"type":"object","properties":{"PersonName":{"type":"string","description":"ПІБ"},"TelephoneUniversalCommunication":{"nullable":true,"$ref":"Phone","description":"Основний телефон"},"MobileTelephoneUniversalCommunication":{"nullable":true,"$ref":"Phone","description":"Мобільний телефон"},"EmailURIUniversalCommunication":{"nullable":true,"$ref":"Email","description":"Електронна пошта"}},"required":["PersonName"]},"ConsigneeTradePartySchemaV2":{"type":"object","properties":{"RoleCode":{"type":"string","const":"CN","default":"CN","description":"Роль учасника - вантажопідйомник"},"ID":{"type":"string","description":"Ідентифікаційний код / ​​​​ЄДРПОУ"},"Name":{"type":"string","description":"Повне найменування"},"PostalTradeAddress":{"nullable":true,"$ref":"AddressSchema","description":"Юридична адреса"},"DefinedTradeContact":{"nullable":true,"$ref":"BaseTradeContactSchema","description":"Контактні/відповідальні особи"},"SpecifiedTaxRegistration":{"nullable":true,"type":"string","description":"Ідентифікаційний код в.о."},"TradePartyUNZR":{"nullable":true,"type":"string","description":"УНЗР учасника"},"TradePartyGLN":{"nullable":true,"type":"string","description":"GLN учасника"}},"required":["ID","Name"]},"ConsignorTradePartySchemaV2":{"type":"object","properties":{"RoleCode":{"type":"string","const":"CZ","default":"CZ","description":"Роль учасника - вантажовідправник"},"ID":{"type":"string","description":"Ідентифікаційний код / ​​ЄДРПОУ"},"Name":{"type":"string","description":"Повне найменування"},"PostalTradeAddress":{"nullable":true,"$ref":"AddressSchema","description":"Юридична адреса"},"DefinedTradeContact":{"nullable":true,"$ref":"BaseTradeContactSchema","description":"Контактні/відповідальні особи"},"SpecifiedTaxRegistration":{"nullable":true,"type":"string","description":"Ідентифікаційний код в.о."},"TradePartyUNZR":{"nullable":true,"type":"string","description":"УНЗР учасника"},"TradePartyGLN":{"nullable":true,"type":"string","description":"GLN учасника"}},"required":["ID","Name"]},"TransportContainerSchemaV2":{"type":"object","properties":{"ID":{"type":"string","description":"Номерний знак"},"AffixedLogisticsSeal":{"type":"array","description":"Номер пломби","items":{"type":"string"}},"MinimumTemperature":{"nullable":true,"type":"string","description":"Температурний режим (хв.)"},"MaximumTemperature":{"nullable":true,"type":"string","description":"Температурний режим (max)"},"CategoryCode":{"type":"string","const":"CN","default":"CN","description":"Кондейнер"},"CharacteristicCode":{"$ref":"ContainerCharacteristicCode","description":"тип контейнера"}},"required":["ID","CharacteristicCode"]},"ContainerCharacteristicCode":{"type":"integer","enum":[21,23],"description":""},"TrailerSchemaV2":{"type":"object","properties":{"ID":{"type":"string","description":"Номерний знак"},"AffixedLogisticsSeal":{"type":"array","description":"Номер пломби","items":{"type":"string"}},"MinimumTemperature":{"nullable":true,"type":"string","description":"Температурний режим (хв.)"},"MaximumTemperature":{"nullable":true,"type":"string","description":"Температурний режим (макс.)"},"CategoryCode":{"type":"string","const":"TE","default":"TE","description":"Причіп/напівпричіп"},"CharacteristicCode":{"$ref":"TrailerCharacteristicCode","description":"тип: причіп або напівпричіп"},"Brand":{"type":"string","description":"Марка"},"Model":{"type":"string","description":"Модель"},"Type":{"nullable":true,"type":"string","description":"Тип (назва)"}},"required":["ID","CharacteristicCode","Brand","Model"],"description":"Температурний режим (макс.)"},"TrailerCharacteristicCode":{"type":"integer","enum":[14,17],"description":""},"TruckSchemaV2":{"type":"object","properties":{"ID":{"type":"string","description":"Номерний знак"},"AffixedLogisticsSeal":{"type":"array","description":"Номер пломби","items":{"type":"string"}},"MinimumTemperature":{"nullable":true,"type":"string","description":"Температурний режим (хв.)"},"MaximumTemperature":{"nullable":true,"type":"string","description":"Температурний режим (макс.)"},"CategoryCode":{"nullable":true,"type":"string","const":"TRUCK","default":"TRUCK","description":"Тип"},"Brand":{"type":"string","description":"Марка"},"Model":{"type":"string","description":"Модель"},"Color":{"nullable":true,"type":"string","description":"Колір"},"Type":{"nullable":true,"type":"string","description":"Тип (назва)"}},"required":["ID","Brand","Model"]},"ExchangedDocumentSchemaV2":{"type":"object","properties":{"ID":{"type":"string","description":"Номер документа"},"IssueDateTime":{"type":"string","format":"date-time","description":"Дата і час складання документа"},"IssueLogisticsLocation":{"$ref":"LocationBaseSchema","description":"Місце складання"},"GrossWeightMeasureText":{"$ref":"IncludeNote","description":"Маса брутто, т (словами)"},"AssociatedInvoiceAmountText":{"$ref":"IncludeNote","description":"Усього відпущено на загальну суму, грн (словами)"},"VatAmount":{"$ref":"IncludeNote","description":"У тому числі ПДВ (числа) значення)"},"VatAmountText":{"$ref":"IncludeNote","description":"У тому числі ПДВ (словами)"},"ConsignmentItemQuantityText":{"$ref":"IncludeNote","description":"Кількість місць (словами)"},"VehicleLength":{"$ref":"IncludeNote","description":"Загальна довжина ТЗ, м"},"VehicleWidth":{"$ref":"IncludeNote","description":"Ширина ТЗ, м"},"VehicleHeight":{"$ref":"IncludeNote","description":"Висота ТЗ, м"},"GrossVehicleWeightWithCargo":{"$ref":"IncludeNote","description":"Загальна вага/маса з вантажем та маса брутто, т"},"VehicleStorageAddress":{"nullable":true,"$ref":"IncludeNote","description":"Місце зберігання"},"TransportationMaxTemperature":{"nullable":true,"$ref":"IncludeNote","description":"максимальна температура під час перевезення"},"LoggerReturn":{"nullable":true,"$ref":"IncludeNote","description":"факт повернення термологера"},"LogisticUnitNumberWithLogger":{"nullable":true,"$ref":"IncludeNote","description":"номер логістичної одиниці з термологером"},"GpsNumber":{"nullable":true,"$ref":"IncludeNote","description":"номер GPS"},"LoggerNumber":{"nullable":true,"$ref":"IncludeNote","description":"номер термологера"},"Comment":{"nullable":true,"$ref":"IncludeNote","description":"коментар","guessed":true},"PalletsWithTemperatureControlQuantity":{"nullable":true,"$ref":"IncludeNote","description":"кількість палет з температурним режимом"},"PalletsWithoutTemperatureControlQuantity":{"nullable":true,"$ref":"IncludeNote","description":"кількість палет без температури режим"},"ReserveNumber":{"nullable":true,"$ref":"IncludeNote","description":"номер резерву"},"PackagingTypeDescriptionLoad":{"nullable":true,"$ref":"IncludeNote","description":"тип тарифу (опис)"},"PackagingTypeDescriptionUnload":{"nullable":true,"$ref":"IncludeNote","description":"тип тарифу (опис)"},"IssueBasis":{"nullable":true,"$ref":"IncludeNote","description":"Назва договору"},"Barcode":{"nullable":true,"$ref":"IncludeNote","description":"Штрих-код документу"},"S3Number":{"nullable":true,"$ref":"IncludeNote","description":"Номер C3"}},"required":["ID","IssueDateTime","IssueLogisticsLocation","GrossWeightMeasureText","AssociatedInvoiceAmountText","VatAmount","VatAmountText","ConsignmentItemQuantityText","VehicleLength","VehicleWidth","VehicleHeight","GrossVehicleWeightWithCargo"]},"IncludeNote":{"type":"object","properties":{"ContentCode":{"type":"string","description":"Зміст"},"Content":{"nullable":true,"type":"string","description":"Роль учасника, що додав значення","examples":[null]},"SubjectCode":{"type":"array","description":"Додаткові коди SubjectCode (наприклад, для тари)","items":{"$ref":"IncludeNoteSubjectCode"}}},"required":["ContentCode"]},"IncludeNoteSubjectCode":{"type":"object","properties":{"ContentCode":{"type":"string","description":"Значення SubjectCode"},"listAgencyID":{"type":"string","description":"Атрибут listAgencyID елемента SubjectCode"}},"required":["ContentCode","listAgencyID"]},"LocationBaseSchema":{"type":"object","properties":{"Name":{"type":"string","default":"Місце складання документа","description":"Найменування локації"},"Description":{"type":"string","description":"Адреса (наприклад - '79000, м.Львів, вул. Словацького, 1')"}},"required":["Description"]}};
+
+const ROOT = 'TTNGenericV2Request';
+const STORAGE_KEY = 'vchasno-ttn-generator-v2';
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') n.className = v;
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else if (k === 'html') n.innerHTML = v;
+    else n.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) n.append(c.nodeType ? c : document.createTextNode(c));
+  return n;
+};
+const resolve = s => (s && s.$ref) ? Object.assign({}, DEFS[s.$ref], strip$ref(s)) : s;
+function strip$ref(s){ const o = Object.assign({}, s); delete o.$ref; if (!o.description) delete o.description; return o; }
+const isObj = s => { s = resolve(s); return s && (s.type === 'object' || s.properties) && !s.freeform; };
+const isEmpty = v => v === undefined || v === null || v === '' ||
+  (Array.isArray(v) && v.length === 0) ||
+  (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0);
+const pathStr = p => p.map((x, i) => typeof x === 'number' ? `[${x}]` : (i ? '.' : '') + x).join('');
+
+/* ---------- state ---------- */
+let state = {};
+function getAt(path){ let o = state; for (const k of path){ if (o == null) return undefined; o = o[k]; } return o; }
+function setAt(path, val){
+  let o = state;
+  for (let i = 0; i < path.length - 1; i++){
+    const k = path[i];
+    if (o[k] == null) o[k] = typeof path[i + 1] === 'number' ? [] : {};
+    o = o[k];
+  }
+  const last = path[path.length - 1];
+  if (val === undefined || val === '') delete o[last]; else o[last] = val;
 }
 
-addItem();
+/* ---------- serialization: state -> payload ---------- */
+function build(schema, value, force){
+  schema = resolve(schema);
+  if (!schema) return undefined;
+  if (schema.const !== undefined) return undefined;          // consts додаються батьком
+  if (schema.freeform){
+    if (!value || typeof value !== 'object') return undefined;
+    const o = {}; for (const [k, v] of Object.entries(value)) if (k && v !== '' && v != null) o[k] = v;
+    return Object.keys(o).length ? o : undefined;
+  }
+  if (schema.properties){
+    const out = {};
+    for (const [k, ps] of Object.entries(schema.properties)){
+      const v = build(ps, value ? value[k] : undefined, false);
+      if (v !== undefined) out[k] = v;
+    }
+    if (!Object.keys(out).length && !force) return undefined;
+    // константи (RoleCode, CategoryCode, TypeCode, ttn_type …) — лише коли блок заповнено
+    const res = {};
+    for (const [k, ps] of Object.entries(schema.properties)){
+      const r = resolve(ps);
+      if (r && r.const !== undefined) res[k] = r.const;
+      else if (k in out) res[k] = out[k];
+    }
+    return res;
+  }
+  if (schema.type === 'array' || schema.items){
+    if (!Array.isArray(value)) return undefined;
+    const arr = value.map(v => {
+      if (schema.items && schema.items.anyOf){
+        const variant = (v && v.__variant) || schema.items.anyOf[0].$ref;
+        const vv = Object.assign({}, v); delete vv.__variant;
+        return build({ $ref: variant }, vv, false);
+      }
+      return build(schema.items || {}, v, false);
+    }).filter(v => v !== undefined);
+    return arr.length ? arr : undefined;
+  }
+  if (value === undefined || value === null || value === '') return undefined;
+  return value;
+}
+function payload(){ return build({ $ref: ROOT }, state, true); }
 
-function generateJSON(){
-
-    const items = [];
-
-    document.querySelectorAll('.item-card')
-    .forEach((card,index)=>{
-
-        const item = clean({
-
-            SequenceNumeric:
-                index + 1,
-
-            NatureIdentificationTransportCargo:
-                card.querySelector('.itm-name').value,
-
-            GrossWeightMeasure:
-                card.querySelector('.itm-weight').value
-                    ? parseFloat(
-                        card.querySelector('.itm-weight').value
-                    )
-                    : undefined,
-
-            TransportLogisticsPackage: {
-
-                Type:
-                    card.querySelector('.itm-type').value,
-
-                ItemQuantity:
-                    card.querySelector('.itm-qty').value
-                        ? parseInt(
-                            card.querySelector('.itm-qty').value
-                        )
-                        : undefined,
-
-                TypeCode:
-                    card.querySelector('.itm-code').value
-            }
+/* ---------- validation ---------- */
+function validate(schema, value, path, active, out){
+  schema = resolve(schema);
+  if (!schema || schema.const !== undefined) return;
+  if (schema.properties){
+    const has = build(schema, value, false) !== undefined;
+    if (!active && !has) return;
+    for (const [k, ps] of Object.entries(schema.properties)){
+      const req = (schema.required || []).includes(k);
+      const r = resolve(ps);
+      if (r.const !== undefined) continue;
+      const v = value ? value[k] : undefined;
+      if (r.properties) validate(ps, v, path.concat(k), req, out);
+      else if (r.type === 'array' || r.items){
+        const built = build(ps, v, false);
+        if (req && !built) out.push(path.concat(k));
+        if (Array.isArray(v)) v.forEach((it, i) => {
+          if (r.items && r.items.anyOf){
+            const variant = (it && it.__variant) || r.items.anyOf[0].$ref;
+            validate({ $ref: variant }, it, path.concat(k, i), true, out);
+          } else if (isObj(r.items)) validate(r.items, it, path.concat(k, i), true, out);
         });
+      } else if (req && isEmpty(v)) out.push(path.concat(k));
+    }
+  }
+}
 
-        if(item){
-            items.push(item);
-        }
+/* ---------- rendering ---------- */
+const form = $('#form');
+const nav = $('#nav');
+
+function labelFor(key, s, req, guessed){
+  const desc = s.description && s.description.trim();
+  return el('label', {},
+    desc || key,
+    req ? el('span', { class: 'star', title: "Обов'язкове поле" }, '*') : null,
+    guessed ? el('span', { class: 'guess', title: 'Назву поля відновлено з пошкодженого OpenAPI — перевірте на бекенді' }, '?') : null,
+    el('span', { class: 'k' }, key));
+}
+
+function inputFor(key, s, path){
+  const val = getAt(path);
+  const onChange = (v) => { setAt(path, v); update(); };
+  if (s.const !== undefined){
+    return el('div', { class: 'const', title: 'Константа — підставляється автоматично' }, JSON.stringify(s.const));
+  }
+  if (s.enum){
+    const sel = el('select', { 'data-path': pathStr(path), onchange: e => {
+      const raw = e.target.value; if (raw === '') return onChange(undefined);
+      const opt = s.enum.find(x => String(x) === raw); onChange(opt);
+    }}, el('option', { value: '' }, '—'), s.enum.map(v => el('option', { value: String(v), selected: String(val) === String(v) }, String(v))));
+    return sel;
+  }
+  if (s.type === 'boolean'){
+    return el('select', { 'data-path': pathStr(path), onchange: e => onChange(e.target.value === '' ? undefined : e.target.value === 'true') },
+      el('option', { value: '' }, '—'),
+      el('option', { value: 'true', selected: val === true }, 'true'),
+      el('option', { value: 'false', selected: val === false }, 'false'));
+  }
+  if (s.type === 'number' || s.type === 'integer'){
+    return el('input', { type: 'number', step: s.type === 'integer' ? '1' : 'any', min: s.minimum, max: s.maximum,
+      value: val ?? '', 'data-path': pathStr(path),
+      oninput: e => { const t = e.target.value; onChange(t === '' ? undefined : (s.type === 'integer' ? parseInt(t, 10) : parseFloat(t))); } });
+  }
+  if (s.format === 'date-time'){
+    return el('input', { type: 'datetime-local', step: '1', value: isoToLocal(val), 'data-path': pathStr(path),
+      oninput: e => onChange(e.target.value ? localToIso(e.target.value) : undefined) });
+  }
+  const long = /notes|remarks|опис причин|примітки/i.test(key + ' ' + (s.description || '')) && !/^ID$/.test(key);
+  if (long){
+    return el('textarea', { 'data-path': pathStr(path), rows: 2, oninput: e => onChange(e.target.value || undefined) }, val ?? '');
+  }
+  return el('input', { type: 'text', value: val ?? '', maxlength: s.maxLength, 'data-path': pathStr(path),
+    placeholder: s.format === 'uuid4' ? 'xxxxxxxx-xxxx-4xxx-xxxx-xxxxxxxxxxxx' : (s.default && typeof s.default === 'string' ? s.default : ''),
+    oninput: e => onChange(e.target.value || undefined) });
+}
+
+function isoToLocal(v){
+  if (!v) return '';
+  const d = new Date(v); if (isNaN(d)) return '';
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+function localToIso(v){
+  const d = new Date(v); if (isNaN(d)) return undefined;
+  const off = -d.getTimezoneOffset(), sign = off >= 0 ? '+' : '-', a = Math.abs(off);
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${sign}${p(Math.floor(a/60))}:${p(a%60)}`;
+}
+
+function chipsFor(path){
+  const wrap = el('div', { class: 'chips', 'data-path': pathStr(path) });
+  const draw = () => {
+    wrap.innerHTML = '';
+    (getAt(path) || []).forEach((v, i) => wrap.append(el('span', { class: 'chip' }, v,
+      el('button', { type: 'button', title: 'Видалити', onclick: () => { const a = (getAt(path) || []).slice(); a.splice(i, 1); setAt(path, a.length ? a : undefined); draw(); update(); } }, '×'))));
+    const inp = el('input', { type: 'text', placeholder: 'Введіть і натисніть Enter',
+      onkeydown: e => { if ((e.key === 'Enter' || e.key === ',') && inp.value.trim()){ e.preventDefault(); add(inp.value.trim()); } },
+      onblur: () => { if (inp.value.trim()) add(inp.value.trim()); } });
+    const add = v => { const a = (getAt(path) || []).slice(); a.push(v); setAt(path, a); draw(); update(); wrap.querySelector('input').focus(); };
+    wrap.append(inp);
+  };
+  draw();
+  return wrap;
+}
+
+function kvFor(path){
+  const box = el('div', {});
+  const draw = () => {
+    box.innerHTML = '';
+    const obj = getAt(path) || {};
+    const rows = Object.entries(obj);
+    rows.forEach(([k, v]) => box.append(el('div', { class: 'kv-row' },
+      el('input', { type: 'text', value: k, placeholder: 'Код (напр. MOISTUSDA)', onchange: e => { const o = Object.assign({}, getAt(path)); delete o[k]; if (e.target.value) o[e.target.value] = v; setAt(path, Object.keys(o).length ? o : undefined); draw(); update(); } }),
+      el('input', { type: 'text', value: v, placeholder: 'Значення (напр. 14%)', oninput: e => { const o = Object.assign({}, getAt(path)); o[k] = e.target.value; setAt(path, o); update(); } }),
+      el('button', { type: 'button', class: 'btn sm ghost danger', onclick: () => { const o = Object.assign({}, getAt(path)); delete o[k]; setAt(path, Object.keys(o).length ? o : undefined); draw(); update(); } }, '×'))));
+    box.append(el('button', { type: 'button', class: 'btn sm', onclick: () => { const o = Object.assign({}, getAt(path)); let n = 'KEY'; let i = 1; while (n in o) n = 'KEY' + (++i); o[n] = ''; setAt(path, o); draw(); } }, '+ Показник'));
+  };
+  draw();
+  return box;
+}
+
+/* Поле-примітка IncludeNote: ContentCode в один рядок, решта — під «ще» */
+function isNote(s){ s = resolve(s); return s && s.properties && s.properties.ContentCode && s.properties.SubjectCode; }
+
+function renderProp(key, ps, path, required, depth){
+  const s = resolve(ps);
+  const optCls = required ? '' : ' opt';
+  const searchText = (key + ' ' + (s.description || '')).toLowerCase();
+
+  if (s.freeform){
+    return el('div', { class: 'field' + optCls, style: 'grid-column:1/-1', 'data-search': searchText },
+      labelFor(key, s, required, s.guessed), kvFor(path));
+  }
+  if (isNote(ps)){
+    const inner = resolve(ps);
+    const contentS = Object.assign({}, inner.properties.ContentCode, { description: '' });
+    const moreBody = el('div', { class: 'grid' },
+      renderProp('Content', inner.properties.Content, path.concat('Content'), false, depth + 1),
+      renderProp('SubjectCode', inner.properties.SubjectCode, path.concat('SubjectCode'), false, depth + 1));
+    return el('div', { class: 'note-row' + optCls, 'data-search': searchText },
+      el('div', { class: 'field' }, labelFor(key, s, required, s.guessed), inputFor('ContentCode', contentS, path.concat('ContentCode'))),
+      el('div', { class: 'hint' }, 'IncludeNote → ContentCode'),
+      el('details', { class: 'group more' }, el('summary', {}, el('span', { class: 'chev' }, '▶'), 'Content / SubjectCode'), moreBody));
+  }
+  if (s.properties){
+    const open = required || build(s, getAt(path), false) !== undefined;
+    const det = el('details', { class: 'group' + optCls, open: open, 'data-search': searchText },
+      el('summary', {}, el('span', { class: 'chev' }, '▶'), s.description || key,
+        required ? el('span', { class: 'star' }, '*') : null,
+        el('span', { class: 'key', style: 'font-weight:400' }, key)),
+      renderObject(s, path, depth + 1));
+    return det;
+  }
+  if (s.type === 'array' || s.items){
+    const items = resolve(s.items || {});
+    if (!s.items || (!isObj(s.items) && !s.items.anyOf)){
+      return el('div', { class: 'field' + optCls, style: 'grid-column:1/-1', 'data-search': searchText },
+        labelFor(key, s, required, s.guessed), chipsFor(path), el('span', { class: 'hint' }, 'Список значень'));
+    }
+    return renderArray(key, s, path, required, depth);
+  }
+  return el('div', { class: 'field' + optCls, 'data-search': searchText },
+    labelFor(key, s, required, s.guessed), inputFor(key, s, path),
+    s.format === 'date-time' ? el('span', { class: 'hint' }, 'ISO 8601, з часовим поясом') : null);
+}
+
+function renderObject(s, path, depth){
+  const grid = el('div', { class: 'grid' });
+  const req = s.required || [];
+  // спочатку прості поля, потім вкладені блоки
+  const entries = Object.entries(s.properties);
+  const simple = entries.filter(([, ps]) => { const r = resolve(ps); return !r.properties && !(r.items && (isObj(r.items) || r.items.anyOf)) && !r.freeform && !(r.type === 'array' && !r.items); });
+  const complex = entries.filter(e => !simple.includes(e));
+  const order = [...simple.filter(([k]) => req.includes(k)), ...simple.filter(([k]) => !req.includes(k)),
+                 ...complex.filter(([k]) => req.includes(k)), ...complex.filter(([k]) => !req.includes(k))];
+  for (const [k, ps] of order) grid.append(renderProp(k, ps, path.concat(k), req.includes(k), depth));
+  return grid;
+}
+
+function renderArray(key, s, path, required, depth){
+  const box = el('div', { class: 'arr' + (required ? '' : ' opt'), 'data-search': (key + ' ' + (s.description || '')).toLowerCase() });
+  const list = el('div', {});
+  const variants = s.items.anyOf ? s.items.anyOf.map(v => v.$ref) : null;
+  const itemSchema = variants ? null : resolve(s.items);
+  const seqKey = itemSchema && itemSchema.properties && itemSchema.properties.SequenceNumeric ? 'SequenceNumeric' : null;
+
+  const draw = () => {
+    list.innerHTML = '';
+    const arr = getAt(path) || [];
+    if (!arr.length) list.append(el('div', { class: 'empty-arr' }, 'Немає елементів'));
+    arr.forEach((it, i) => {
+      const ipath = path.concat(i);
+      let body;
+      let variantSel = null;
+      if (variants){
+        const cur = (it && it.__variant) || variants[0];
+        variantSel = el('select', { class: 'variant', onchange: e => { setAt(ipath, { __variant: e.target.value }); draw(); update(); } },
+          variants.map(v => el('option', { value: v, selected: v === cur }, variantLabel(v))));
+        body = renderObject(resolve({ $ref: cur }), ipath, depth + 1);
+      } else body = renderObject(itemSchema, ipath, depth + 1);
+      list.append(el('div', { class: 'arr-item' },
+        el('div', { class: 'arr-item-head' }, el('span', { class: 'n' }, '#' + (i + 1)), variantSel, el('span', { class: 'spacer' }),
+          el('button', { type: 'button', class: 'btn sm ghost', title: 'Дублювати', onclick: () => { const a = (getAt(path) || []).slice(); const copy = JSON.parse(JSON.stringify(a[i])); if (seqKey) copy[seqKey] = a.length + 1; a.splice(i + 1, 0, copy); setAt(path, a); renumber(); draw(); update(); } }, '⧉'),
+          el('button', { type: 'button', class: 'btn sm ghost danger', title: 'Видалити', onclick: () => { const a = (getAt(path) || []).slice(); a.splice(i, 1); setAt(path, a.length ? a : undefined); renumber(); draw(); update(); } }, '✕')),
+        body));
     });
+  };
+  const renumber = () => { if (!seqKey) return; (getAt(path) || []).forEach((it, i) => { it[seqKey] = i + 1; }); };
+  const add = () => {
+    const a = (getAt(path) || []).slice();
+    const item = variants ? { __variant: variants[0] } : {};
+    if (seqKey) item[seqKey] = a.length + 1;
+    a.push(item); setAt(path, a); draw(); update();
+  };
+  box.append(
+    el('div', { class: 'arr-head' }, el('span', { class: 't' }, s.description || key), required ? el('span', { class: 'star' }, '*') : null,
+      el('span', { class: 'key' }, key), el('span', { style: 'flex:1' }),
+      el('button', { type: 'button', class: 'btn sm', onclick: add }, '+ Додати')),
+    list);
+  box._redraw = draw;
+  draw();
+  return box;
+}
+function variantLabel(ref){
+  return ({ DigitalReferencedDocumentSchemaBase: 'Електронний документ (uid файлу)', ReferencedDocumentSchema: 'Документ (реквізити)' })[ref] || ref;
+}
 
-    const payload = clean({
+/* Розділи верхнього рівня = навігація */
+function sections(){
+  const root = DEFS[ROOT];
+  const ssc = resolve(root.properties.SpecifiedSupplyChainConsignment);
+  const list = [];
+  const meta = { type: 'object', properties: {}, required: [] };
+  for (const [k, ps] of Object.entries(root.properties)){
+    const r = resolve(ps);
+    if (!r.properties) meta.properties[k] = ps;
+  }
+  list.push({ id: 'sec-meta', title: 'Загальне', key: 'ttn_type, schema_version …', schema: meta, path: [] });
+  list.push({ id: 'sec-doc', title: 'Реквізити ТТН', key: 'ExchangedDocument', schema: resolve(root.properties.ExchangedDocument), path: ['ExchangedDocument'], required: true });
+  // прості поля консигнації в окремий розділ
+  const sscSimple = { type: 'object', properties: {}, required: (ssc.required || []) };
+  for (const [k, ps] of Object.entries(ssc.properties)){
+    const r = resolve(ps);
+    if (!r.properties && !(r.items && (isObj(r.items) || r.items.anyOf))) sscSimple.properties[k] = ps;
+  }
+  if (Object.keys(sscSimple.properties).length)
+    list.push({ id: 'sec-ssc', title: 'Вага та суми', key: 'SpecifiedSupplyChainConsignment', schema: sscSimple, path: ['SpecifiedSupplyChainConsignment'] });
+  const titles = {
+    ConsignorTradeParty: 'Вантажовідправник', ConsigneeTradeParty: 'Вантажоодержувач', CarrierTradeParty: 'Перевізник',
+    CustomerTradeParty: 'Замовник', ForwarderTradeParty: 'Експедитор', TransitWHTradeParty: 'Проміжний склад', GuardTradeParty: 'Охоронна компанія',
+    ThirdParties: 'Інші учасники', TransportEquipmentTruck: 'Автомобіль', TransportEquipmentTrailer: 'Причепи', TransportEquipmentContainer: 'Контейнери',
+    CarrierAcceptanceLogisticsLocation: 'Пункт навантаження', ConsigneeReceiptLogisticsLocation: 'Пункт розвантаження',
+    MainCarriageLogisticsTransportMovement: 'Маршрут (проміжні пункти)', DeliveryInstructions: 'Вид перевезення',
+    SupplyChainItems: 'Вантаж (товари)', AssociatedReferencedDocument: 'Супровідні документи',
+    PickUpTransportEvent: 'Навантажувальні роботи', DeliveryTransportEvent: 'Розвантажувальні роботи'
+  };
+  const order = ['ConsignorTradeParty','ConsigneeTradeParty','CarrierTradeParty','CustomerTradeParty','TransportEquipmentTruck','TransportEquipmentTrailer','TransportEquipmentContainer',
+    'CarrierAcceptanceLogisticsLocation','ConsigneeReceiptLogisticsLocation','SupplyChainItems','ForwarderTradeParty','TransitWHTradeParty','GuardTradeParty','ThirdParties',
+    'DeliveryInstructions','AssociatedReferencedDocument','MainCarriageLogisticsTransportMovement','PickUpTransportEvent','DeliveryTransportEvent'];
+  const keys = Object.keys(ssc.properties).filter(k => !(k in sscSimple.properties));
+  keys.sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99));
+  for (const k of keys){
+    list.push({ id: 'sec-' + k, title: titles[k] || ssc.properties[k].description || k, key: k, prop: k,
+      schema: ssc.properties[k], path: ['SpecifiedSupplyChainConsignment', k], required: (ssc.required || []).includes(k) });
+  }
+  return list;
+}
 
-    ttn_type: "generic",
+let SECTIONS = [];
+function renderAll(){
+  form.innerHTML = '';
+  nav.querySelectorAll('a').forEach(a => a.remove());
+  SECTIONS = sections();
+  for (const sec of SECTIONS){
+    let body;
+    const r = resolve(sec.schema);
+    if (sec.prop && (r.type === 'array' || r.items)){
+      body = el('div', { class: 'grid' }, renderArray(sec.key, Object.assign({}, r, { description: 'Елементи' }), sec.path, sec.required, 1));
+    } else body = renderObject(r, sec.path, 1);
+    const hasData = sec.path.length && build(sec.schema, getAt(sec.path), false) !== undefined;
+    const det = el('details', { class: 'section', id: sec.id, open: sec.required || hasData || sec.id === 'sec-meta' || sec.id === 'sec-ssc' },
+      el('summary', {}, el('span', { class: 'chev' }, '▶'), el('h3', {}, sec.title),
+        sec.required ? el('span', { class: 'star' }, '*') : null,
+        el('span', { class: 'key' }, sec.key)),
+      el('div', { class: 'section-body' }, body));
+    form.append(det);
+    nav.append(el('a', { href: '#' + sec.id, 'data-sec': sec.id, onclick: e => { e.preventDefault(); det.open = true; det.scrollIntoView({ behavior: 'smooth', block: 'start' }); } },
+      el('span', { class: 'dot' }), sec.title, el('span', { class: 'req' })));
+  }
+  applySearch();
+  if (typeof io !== 'undefined') form.querySelectorAll('.section').forEach(s => io.observe(s));
+}
 
-    schema_version: 2,
+/* ---------- output ---------- */
+const out = $('#out');
+function highlight(json){
+  return json.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/("(?:\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*")(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g, (m, str, colon, lit) => {
+      if (str) return colon ? `<span class="j-k">${str}</span>${colon}` : `<span class="j-s">${str}</span>`;
+      if (lit) return `<span class="j-l">${m}</span>`;
+      return `<span class="j-n">${m}</span>`;
+    });
+}
+let lastJson = '';
+function update(){
+  const p = payload();
+  lastJson = JSON.stringify(p, null, 2);
+  out.innerHTML = highlight(lastJson);
+  const missing = [];
+  validate({ $ref: ROOT }, state, [], true, missing);
+  const st = $('#status'), ml = $('#missingList');
+  st.innerHTML = '';
+  const bytes = new Blob([lastJson]).size;
+  if (missing.length){
+    st.append(el('span', { class: 'pill warn', title: 'Показати список', onclick: () => ml.classList.toggle('open') }, `Не заповнено обов'язкових: ${missing.length}`));
+  } else st.append(el('span', { class: 'pill ok' }, "Усі обов'язкові поля заповнено"));
+  st.append(el('span', { class: 'pill info' }, `${(bytes / 1024).toFixed(1)} KB`));
+  ml.innerHTML = '';
+  missing.forEach(p => ml.append(el('a', { onclick: () => focusPath(p) }, pathStr(p))));
+  if (!missing.length) ml.classList.remove('open');
+  // навігація: стан розділів
+  for (const sec of SECTIONS){
+    const a = nav.querySelector(`[data-sec="${sec.id}"]`); if (!a) continue;
+    const prefix = pathStr(sec.path);
+    const secMissing = sec.path.length ? missing.filter(m => {
+      const s = pathStr(m);
+      if (!s.startsWith(prefix)) return false;
+      if (sec.id === 'sec-ssc') return m.length === 2 && sec.schema.properties[m[1]];
+      return true;
+    }).length : 0;
+    const filled = sec.path.length && build(sec.schema, getAt(sec.path), false) !== undefined;
+    a.classList.toggle('missing', secMissing > 0);
+    a.classList.toggle('filled', !secMissing && !!filled);
+    a.querySelector('.req').textContent = secMissing ? secMissing : '';
+  }
+  save();
+}
+function focusPath(p){
+  const ps = pathStr(p);
+  let node = form.querySelector(`[data-path="${CSS.escape(ps)}"]`);
+  if (!node){
+    // масив або блок — шукаємо найближчий батьківський елемент
+    for (let i = p.length - 1; i > 0 && !node; i--){
+      const sub = pathStr(p.slice(0, i));
+      node = form.querySelector(`[data-path^="${CSS.escape(sub)}"]`);
+    }
+  }
+  const sec = SECTIONS.find(s => ps.startsWith(pathStr(s.path)) && s.path.length) ;
+  if (sec) document.getElementById(sec.id).open = true;
+  if (node){
+    let d = node.closest('details'); while (d){ d.open = true; d = d.parentElement.closest('details'); }
+    const f = node.closest('.field') || node;
+    f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    f.classList.remove('flash'); void f.offsetWidth; f.classList.add('flash');
+    if (node.focus) setTimeout(() => node.focus({ preventScroll: true }), 300);
+  } else if (sec) document.getElementById(sec.id).scrollIntoView({ behavior: 'smooth' });
+}
 
-        ExchangedDocument: {
+/* ---------- persistence ---------- */
+function save(){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {} }
+function load(){ try { const s = localStorage.getItem(STORAGE_KEY); if (s) return JSON.parse(s); } catch (e) {} return null; }
 
-    ID:
-        val('doc_id'),
-
-    IssueDateTime:
-        val('doc_date')
-            ? new Date(
-                val('doc_date')
-            ).toISOString()
-            : undefined,
-
-    IssueLogisticsLocation: {
-
-        Name:
-            val('issue_name'),
-
-        Description:
-            val('issue_desc')
+/* ---------- приклад ---------- */
+function sample(){
+  const now = new Date(); now.setSeconds(0, 0);
+  const iso = localToIso(isoToLocal(now.toISOString()));
+  return {
+    ExchangedDocument: {
+      ID: 'ТТН-000123', IssueDateTime: iso,
+      IssueLogisticsLocation: { Name: 'Місце складання документа', Description: '01001, м. Київ, вул. Хрещатик, 1' },
+      GrossWeightMeasureText: { ContentCode: 'Дванадцять тонн' },
+      AssociatedInvoiceAmountText: { ContentCode: 'Сто двадцять тисяч гривень 00 копійок' },
+      VatAmount: { ContentCode: '20000.00' },
+      VatAmountText: { ContentCode: 'Двадцять тисяч гривень 00 копійок' },
+      ConsignmentItemQuantityText: { ContentCode: 'Двадцять чотири' },
+      VehicleLength: { ContentCode: '16.5' }, VehicleWidth: { ContentCode: '2.55' }, VehicleHeight: { ContentCode: '4' },
+      GrossVehicleWeightWithCargo: { ContentCode: '40' }
     },
-
-    GrossWeightMeasureText:
-        val('gross_weight')
-            ? {
-                value: parseFloat(
-                    val('gross_weight')
-                ),
-                unitCode: 'KGM',
-                ContentCode:
-                    val('gross_weight_text')
-                    || val('gross_weight')
-            }
-            : undefined,
-
-    AssociatedInvoiceAmountText:
-        val('invoice_amount')
-            ? {
-                value: parseFloat(
-                    val('invoice_amount')
-                ),
-                currencyID: 'UAH',
-                ContentCode:
-                    val('invoice_amount')
-            }
-            : undefined,
-
-    VatAmount:
-        val('vat_amount')
-            ? {
-                value: parseFloat(
-                    val('vat_amount')
-                ),
-                currencyID: 'UAH',
-                ContentCode:
-                    val('vat_amount')
-            }
-            : undefined,
-
-    VatAmountText:
-        val('vat_amount_text')
-            ? {
-                value:
-                    val('vat_amount_text'),
-
-                ContentCode:
-                    val('vat_amount_text')
-            }
-            : undefined,
-
-    ConsignmentItemQuantityText:
-        val('items_qty')
-            ? {
-                value: parseInt(
-                    val('items_qty')
-                ),
-                unitCode: 'NMP',
-                ContentCode:
-                    val('items_qty')
-            }
-            : undefined,
-
-    VehicleLength:
-        val('vehicle_length')
-            ? {
-                value: parseFloat(
-                    val('vehicle_length')
-                ),
-                unitCode: 'MTR',
-                ContentCode:
-                    val('vehicle_length')
-            }
-            : undefined,
-
-    VehicleWidth:
-        val('vehicle_width')
-            ? {
-                value: parseFloat(
-                    val('vehicle_width')
-                ),
-                unitCode: 'MTR',
-                ContentCode:
-                    val('vehicle_width')
-            }
-            : undefined,
-
-    VehicleHeight:
-        val('vehicle_height')
-            ? {
-                value: parseFloat(
-                    val('vehicle_height')
-                ),
-                unitCode: 'MTR',
-                ContentCode:
-                    val('vehicle_height')
-            }
-            : undefined,
-
-    GrossVehicleWeightWithCargo:
-        val('gross_vehicle_weight')
-            ? {
-                value: parseFloat(
-                    val('gross_vehicle_weight')
-                ),
-                unitCode: 'KGM',
-                ContentCode:
-                    val('gross_vehicle_weight')
-            }
-            : undefined
-},
-
-        SpecifiedSupplyChainConsignment: {
-
-            CarrierTradeParty: {
-
-                DefinedTradeContact: {
-
-                    PersonName:
-                        val('carrier_person')
-                },
-
-                SpecifiedTaxRegistration:
-                    val('carrier_tax'),
-
-                SpecifiedGovernmentRegistration:
-                    val('carrier_license'),
-
-                ID:
-                    val('carrier_id'),
-
-                Name:
-                    val('carrier_name')
-            },
-
-            TransportEquipmentTruck: {
-
-    Brand:
-        val('truck_brand'),
-
-    Model:
-        val('truck_model'),
-
-    ID:
-        val('truck_id'),
-
-    Color:
-        val('truck_color'),
-
-    Type:
-        val('truck_type'),
-
-    RegistrationCountry:
-        val('truck_country'),
-
-    MinimumTemperature:
-        val('truck_temp_min'),
-
-    MaximumTemperature:
-        val('truck_temp_max'),
-
-    Driver: {
-
-        ID:
-            val('driver_id'),
-
-        Name:
-            val('driver_name'),
-
-        LicenseID:
-            val('driver_license'),
-
-        TelephoneUniversalCommunication: {
-
-            CompleteNumber:
-                val('driver_phone')
-        }
+    SpecifiedSupplyChainConsignment: {
+      GrossWeightMeasure: 12000, AssociatedInvoiceAmount: 120000,
+      ConsignorTradeParty: { ID: '12345678', Name: 'ТОВ "ВІДПРАВНИК"', PostalTradeAddress: { PostcodeCode: '01001', CityName: 'Київ', StreetName: 'вул. Хрещатик, 1' }, DefinedTradeContact: { PersonName: 'Іваненко Іван Іванович' } },
+      ConsigneeTradeParty: { ID: '87654321', Name: 'ТОВ "ОДЕРЖУВАЧ"', PostalTradeAddress: { PostcodeCode: '79000', CityName: 'Львів', StreetName: 'вул. Словацького, 1' } },
+      CarrierTradeParty: { ID: '11223344', Name: 'ТОВ "ПЕРЕВІЗНИК"', SpecifiedTaxRegistration: '1234567890', SpecifiedGovernmentRegistration: 'ВХА123456', DefinedTradeContact: { PersonName: 'Петренко Петро Петрович', TelephoneUniversalCommunication: { CompleteNumber: '+380501234567' } } },
+      CustomerTradeParty: { ID: '12345678', Name: 'ТОВ "ВІДПРАВНИК"' },
+      TransportEquipmentTruck: { ID: 'AA1234BB', Brand: 'DAF', Model: 'XF 480', AffixedLogisticsSeal: ['SEAL-0001'] },
+      TransportEquipmentTrailer: [{ ID: 'AA5678XT', Brand: 'Schmitz', Model: 'S.KO', CharacteristicCode: 17 }],
+      CarrierAcceptanceLogisticsLocation: { Name: 'Склад відправника', Description: '01001, м. Київ, вул. Хрещатик, 1', ID: 'UA80000000000093317' },
+      ConsigneeReceiptLogisticsLocation: { Name: 'Склад одержувача', Description: '79000, м. Львів, вул. Словацького, 1', ID: 'UA46060250010015970' },
+      SupplyChainItems: [
+        { SequenceNumeric: 1, NatureIdentificationTransportCargo: 'Борошно пшеничне в/г', GrossWeightMeasure: 12000, InvoiceAmount: 120000, TariffQuantity: 8.33, GlobalID: '1101001500',
+          TransportLogisticsPackage: { ItemQuantity: 24, Type: 'палета', TypeCode: 'PX' } }
+      ]
     }
-},
-
-            CustomerTradeParty: {
-
-                ID:
-                    val('customer_id'),
-
-                Name:
-                    val('customer_name')
-            },
-
-            ConsignorTradeParty: {
-
-                ID:
-                    val('consignor_id'),
-
-                Name:
-                    val('consignor_name')
-            },
-
-            ConsigneeTradeParty: {
-
-                ID:
-                    val('consignee_id'),
-
-                Name:
-                    val('consignee_name')
-            },
-
-            CarrierAcceptanceLogisticsLocation: {
-
-    Name:
-        val('load_name'),
-
-    Description:
-        val('load_desc'),
-
-    ID:
-        val('load_id'),
-
-    Address: {
-
-        LineOneText:
-            val('load_desc')
-    },
-
-    TypeCode:
-        val('load_type')
-            ? parseInt(
-                val('load_type')
-            )
-            : undefined
-},
-
-            ConsigneeReceiptLogisticsLocation: {
-
-                Name:
-                    val('unload_name'),
-
-                Description:
-                    val('unload_desc'),
-
-                ID:
-                    val('unload_id'),
-
-Address: {
-
-    LineOneText:
-        val('unload_desc')
-},
-                
-
-                TypeCode:
-                    val('unload_type')
-                        ? parseInt(
-                            val('unload_type')
-                        )
-                        : undefined
-            },
-
-            GrossWeightMeasure:
-                val('gross_weight')
-                    ? parseFloat(
-                        val('gross_weight')
-                    )
-                    : undefined,
-
-            AssociatedInvoiceAmount:
-                val('invoice_amount')
-                    ? parseFloat(
-                        val('invoice_amount')
-                    )
-                    : undefined,
-
-            ConsignmentItemQuantity:
-                val('items_qty')
-                    ? parseInt(
-                        val('items_qty')
-                    )
-                    : undefined,
-
-            SupplyChainItems:
-    items,
-
-AdditionalInformation: {
-
-    SealNumberText:
-        val('seal_number'),
-
-    SpecialNotes:
-        val('special_notes')
-}
-        }
-    });
-
-    document.getElementById(
-        'json-output'
-    ).textContent =
-        JSON.stringify(payload,null,2);
+  };
 }
 
-function copyJSON(){
-
-    navigator.clipboard.writeText(
-        document.getElementById(
-            'json-output'
-        ).textContent
-    );
-
-    alert('JSON скопійовано');
+/* ---------- wiring ---------- */
+$('#copyBtn').onclick = async () => {
+  try { await navigator.clipboard.writeText(lastJson); toast('JSON скопійовано'); }
+  catch (e) { const r = document.createRange(); r.selectNodeContents(out); getSelection().removeAllRanges(); getSelection().addRange(r); toast('Виділено — натисніть Ctrl+C'); }
+};
+$('#dlBtn').onclick = () => {
+  const id = (state.ExchangedDocument && state.ExchangedDocument.ID) || 'ttn';
+  const a = el('a', { href: URL.createObjectURL(new Blob([lastJson], { type: 'application/json' })), download: `ttn-${String(id).replace(/[^\wА-Яа-яІіЇїЄєҐґ-]+/g, '_')}.json` });
+  document.body.append(a); a.click(); a.remove();
+};
+$('#clearBtn').onclick = () => { if (confirm('Очистити всі поля?')){ state = {}; renderAll(); update(); toast('Форму очищено'); } };
+$('#sampleBtn').onclick = () => { state = sample(); renderAll(); update(); toast('Заповнено тестовими даними'); };
+$('#optToggle').onchange = e => form.classList.toggle('hidden-opt', !e.target.checked);
+let expanded = false;
+$('#expandBtn').onclick = e => { expanded = !expanded; form.querySelectorAll('details').forEach(d => d.open = expanded); e.target.textContent = expanded ? 'Згорнути все' : 'Розгорнути все'; };
+$('#search').oninput = applySearch;
+function applySearch(){
+  const q = $('#search').value.trim().toLowerCase();
+  const nodes = form.querySelectorAll('[data-search]');
+  nodes.forEach(n => n.classList.remove('search-miss'));
+  form.querySelectorAll('.section').forEach(s => s.classList.remove('search-miss'));
+  if (!q) return;
+  // показуємо збіги та їхніх предків
+  const hits = new Set();
+  nodes.forEach(n => { if (n.dataset.search.includes(q)) { hits.add(n); let p = n.parentElement; while (p && p !== form){ hits.add(p); p = p.parentElement; } } });
+  nodes.forEach(n => { const inHit = n.parentElement && n.parentElement.closest('[data-search]') && [...hits].some(h => h.dataset && h.dataset.search && h.dataset.search.includes(q) && h.contains(n)); if (!hits.has(n) && !inHit) n.classList.add('search-miss'); });
+  form.querySelectorAll('.section').forEach(s => { if (!hits.has(s)) s.classList.add('search-miss'); else s.open = true; });
+  form.querySelectorAll('details.group').forEach(d => { if (hits.has(d)) d.open = true; });
 }
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 1800); }
 
-function downloadJSON(){
 
-    const blob = new Blob(
-        [
-            document.getElementById(
-                'json-output'
-            ).textContent
-        ],
-        {
-            type:'application/json'
-        }
-    );
 
-    const a = document.createElement('a');
+/* активний розділ у навігації */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(en => { if (en.isIntersecting){ nav.querySelectorAll('a').forEach(a => a.classList.toggle('active', a.dataset.sec === en.target.id)); } });
+}, { root: document.querySelector('.main'), rootMargin: '0px 0px -70% 0px' });
 
-    a.href = URL.createObjectURL(blob);
-
-    a.download = 'ettn.json';
-
-    a.click();
-}
-
-function clearForm(){
-
-    if(confirm('Очистити форму?')){
-        location.reload();
-    }
-}
-javascript
-function openTab(tabId, btn){
-
-    document
-        .querySelectorAll('.tab-content')
-        .forEach(tab => {
-            tab.classList.remove('active');
-        });
-
-    document
-        .querySelectorAll('.tab-btn')
-        .forEach(button => {
-            button.classList.remove('active');
-        });
-
-    document
-        .getElementById(tabId)
-        .classList.add('active');
-
-    btn.classList.add('active');
-}
-
-function generateActJSON(){
-
-    const payload = clean({
-
-        version: 0,
-
-        act: {
-
-            ExchangedDocument: {
-
-                ID:
-                    val('act_doc_id'),
-
-                IssueDateTime:
-                    val('act_doc_date')
-                        ? new Date(
-                            val('act_doc_date')
-                        ).toISOString()
-                        : undefined,
-
-                IssueLogisticsLocation: {
-
-    Name:
-        val('issue_name'),
-
-    Description:
-        val('issue_desc'),
-
-    Address: {
-
-        LineOneText:
-            val('issue_desc')
-    }
-},
-
-                Remarks:
-                    val('act_remarks')
-            },
-
-            type:
-                val('act_type'),
-
-            RejectActPayload: {
-
-                ConsignorNotes:
-                    val('consignor_notes'),
-
-                CarrierNotes:
-                    val('carrier_notes')
-            },
-
-            CertifyingPartyPayload: {
-
-                ConsignorCertifyingParty: {
-
-                    RoleCode: 'CZ',
-
-                    ID:
-                        val('consignor_cert_id'),
-
-                    Name:
-                        val('consignor_cert_name'),
-
-                    PersonName:
-                        val('consignor_cert_person')
-                },
-
-                CarrierCertifyingParty: {
-
-                    RoleCode: 'CA',
-
-                    ID:
-                        val('carrier_cert_id'),
-
-                    Name:
-                        val('carrier_cert_name'),
-
-                    PersonName:
-                        val('carrier_cert_person')
-                }
-            }
-        }
-    });
-
-    document.getElementById(
-        'act-json-output'
-    ).textContent = JSON.stringify(
-        payload,
-        null,
-        2
-    );
-}
-
-function copyActJSON(){
-
-    navigator.clipboard.writeText(
-        document.getElementById(
-            'act-json-output'
-        ).textContent
-    );
-
-    alert('ACT JSON скопійовано');
-}
-
-setTimeout(()=>{
-
-    const actDate = document.getElementById('act_doc_date');
-
-    if(actDate){
-        actDate.value = new Date()
-            .toISOString()
-            .slice(0,16);
-    }
-
-},100);
+/* старт */
+state = load() || { SpecifiedSupplyChainConsignment: { SupplyChainItems: [{ SequenceNumeric: 1 }] } };
+renderAll();
+update();
 </script>
-
 </body>
 </html>
