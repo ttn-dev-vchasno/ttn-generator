@@ -344,12 +344,124 @@ body{background:linear-gradient(180deg,#D3D5D8 0%,#C5C7CA 50%,#B9BBBF 100%) fixe
 .main .group,.main .note-card,.main .arr-item{background:rgba(152,155,160,.42);border-color:rgba(255,255,255,.32)}
 .main .group .group{background:rgba(138,141,146,.4)}
 @media (max-width:1100px){ .main{background-attachment:scroll} }
+
+/* ============================================================
+   Варіант «Документ на папері» (2026-10-27, пропозиція Claude):
+   світлий теплий «паперовий» фон, білі аркуші-розділи з тонкими лініями,
+   стримані поля. Панель JSON праворуч не чіпаємо.
+   Відкотити = видалити цей блок.
+   ============================================================ */
+:root{
+  color-scheme:light;
+  --bg:#F3F1EC;
+  --surface:#FFFFFF;
+  --surface-2:#FAF8F4;
+  --line:#E4E0D7;
+  --line-strong:#CFC9BC;
+  --text:#1F1D1A;
+  --muted:#7A7468;
+  --accent:#5B45C9;
+  --danger:#B4235A;
+  --ok:#2E8A57;
+  --focus:rgba(91,69,201,.18);
+  --paper-shadow:0 1px 0 rgba(31,29,26,.04),0 6px 18px -10px rgba(31,29,26,.18);
+}
+body{background:var(--bg);color:var(--text)}
+
+/* шапка */
+.topbar{background:#FFFFFF;backdrop-filter:none;border-bottom:1px solid var(--line);box-shadow:0 1px 0 rgba(31,29,26,.03)}
+.topbar .tab{color:var(--muted)}
+.topbar .tab:hover{background:var(--surface-2);color:var(--text)}
+.topbar .tab.active{background:var(--accent);color:#fff;box-shadow:none}
+.topbar .tab .soon{background:var(--surface-2);border-color:var(--line);color:var(--muted)}
+.logo-mark{width:32px;height:32px;background:none;border-radius:50%;display:block;flex:none}
+
+/* меню розділів — як зміст документа */
+.nav{background:#FBFAF7;border-right:1px solid var(--line)}
+.nav h6{color:var(--muted)}
+.nav a{color:var(--text);border-radius:6px;position:relative}
+.nav a:hover{background:#F1EEE7}
+.nav a.active{background:#EFEBFA;color:var(--accent);font-weight:600}
+.nav a.active::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:2px;background:var(--accent)}
+.nav a .dot{background:var(--line-strong)}
+.nav a.filled .dot{background:var(--ok)}
+.nav a.missing .dot{background:var(--danger)}
+
+/* робоча область — «стіл» */
+.main{background:var(--bg);background-attachment:scroll}
+
+/* кнопки й пошук */
+.main .btn,.main .search{background:#FFFFFF;color:var(--text);border:1px solid var(--line-strong);box-shadow:0 1px 0 rgba(31,29,26,.04)}
+.main .btn:hover{background:var(--surface-2);border-color:#B9B2A3}
+.main .btn:active{transform:translateY(1px);box-shadow:none}
+.main .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.main .btn.ghost{background:transparent;border-color:transparent;box-shadow:none;color:var(--text)}
+.main .btn.ghost:hover{background:#F1EEE7}
+.main .btn.danger{color:var(--danger)}
+.main .search::placeholder{color:#A7A093}
+.main .search:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--focus)}
+.main .switch{color:var(--muted)}
+.main .switch input{background:var(--line-strong);box-shadow:none}
+.main .switch input:checked{background:var(--accent)}
+
+/* розділи — білі аркуші */
+.main .section{
+  background:var(--surface);
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  border:1px solid var(--line);
+  border-radius:12px;
+  box-shadow:var(--paper-shadow);
+  margin-bottom:16px;
+}
+.main .section:hover{box-shadow:0 1px 0 rgba(31,29,26,.04),0 10px 24px -12px rgba(31,29,26,.22)}
+.main .section>summary{padding:16px 20px}
+.main .section h3{font-size:15px;letter-spacing:.01em}
+.main .section-body{border-top:1px solid var(--line);padding:6px 20px 20px}
+.main .section[open]>summary{border-left:3px solid var(--accent);padding-left:17px;border-radius:12px 0 0 0}
+
+/* вкладені блоки — світло-кремові вставки */
+.main .group,.main .note-card,.main .arr-item{
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  border-radius:10px;
+  box-shadow:none;
+}
+.main .group .group{background:#F5F2EC}
+.main .arr-item-head{border-bottom:1px solid var(--line)}
+.main .arr-item-head .n{background:var(--accent);color:#fff}
+
+/* поля — як графи бланка */
+.main .field label{color:var(--text)}
+.main .field label .k{color:#A39C8E}
+.main .field input,.main .field select,.main .field textarea,.main .chips,.main .arr-item .variant{
+  background:#FFFFFF;color:var(--text);
+  border:1px solid var(--line-strong);
+  border-radius:8px;
+  box-shadow:inset 0 1px 1px rgba(31,29,26,.03);
+  color-scheme:light;
+}
+.main .field input::placeholder,.main .field textarea::placeholder{color:#B0A99B}
+.main .field input:hover,.main .field select:hover,.main .field textarea:hover{border-color:#B9B2A3}
+.main .field input:focus,.main .field select:focus,.main .field textarea:focus,.main .chips:focus-within{
+  border-color:var(--accent);box-shadow:0 0 0 3px var(--focus)}
+.main .field.invalid input,.main .field.invalid select{border-color:var(--danger);background:#FFF7FA}
+.main .note-card .field input{background:#FFFFFF}
+.main .chip{background:#EFEBFA;border-color:#DCD4F5;color:#3E2F94}
+.main .chip button{color:#7F74B8}
+.main .field .const{background:#F6F4EF;color:var(--muted);border:1px dashed var(--line-strong)}
+.main .guess{background:#EFEBFA;color:#3E2F94;border-color:#D6CDF3}
+.main .hint{color:var(--muted)}
+.main .note-more>summary{color:var(--muted)}
+.main .note-more>summary:hover{color:var(--accent)}
+.star{color:var(--danger)}
+
+.toast{background:var(--accent);color:#fff}
 </style>
 </head>
 <body>
 
 <header class="topbar">
-  <div class="logo"><div class="logo-mark">V</div>Вчасно.ТТН <small>JSON генератор</small></div>
+  <div class="logo"><svg class="logo-mark" viewBox="0 0 60 60" role="img" aria-label="Вчасно"><circle cx="30" cy="30" r="30" fill="#AB9EFF"/><path d="M28.7 19.2A11 11 0 1 0 38.4 21.6L30 31.6L25.9 28" fill="none" stroke="#252D3D" stroke-width="3.4" stroke-linejoin="round"/></svg>Вчасно.ТТН <small>JSON генератор</small></div>
   <nav class="tabs" id="tabs">
     <button class="tab active" data-tab="ttn">ТТН V2</button>
     <button class="tab" disabled title="Наступний етап">Імпорт JSON <span class="soon">скоро</span></button>
